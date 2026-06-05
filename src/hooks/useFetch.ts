@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import axios from '../api/axios'
+import api from '../api/axios'
 
 interface UseFetchResult<T> {
   data: T | null
@@ -15,7 +15,7 @@ export function useFetch<T>(url: string) {
   useEffect(() => {
     let mounted = true
 
-    axios
+    api
       .get<T>(url)
       .then((response) => {
         if (mounted) {

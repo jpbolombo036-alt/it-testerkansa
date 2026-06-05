@@ -1,5 +1,7 @@
-import { ShieldCheck } from 'lucide-react'
+import { ShieldCheck, Search } from 'lucide-react'
 import { motion } from 'framer-motion'
+import React, { useState } from 'react'
+import { useAuth } from '../hooks/useAuth'
 
 const badgeItems = ['Administrateur', 'Sécurité', 'Accès']
 
@@ -13,6 +15,13 @@ function getFormattedDate() {
 }
 
 export default function HeroBanner() {
+  const [searchTerm, setSearchTerm] = useState(''); // Nouvel état pour le terme de recherche
+  const { user } = useAuth()
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    // Ici, vous déclencheriez la logique de recherche globale (par exemple, un appel API ou un filtre local)
+  };
   return (
     <motion.section
       initial={{ opacity: 0, y: 18 }}
@@ -22,7 +31,9 @@ export default function HeroBanner() {
     >
       <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="w-full max-w-2xl space-y-5">
-          <p className="text-xs uppercase tracking-[0.24em] text-sky-100/80 sm:text-sm">Bonjour, admin</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-sky-100/80 sm:text-sm">
+            Bonjour, {user?.username || 'admin'}
+          </p>
           <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">Bienvenue dans votre console IT Access Manager</h2>
           <p className="max-w-xl text-sm text-slate-100/90 sm:text-base">Contrôlez les applications, comptes, tests et sessions de votre organisation avec une vue centralisée et des métriques claires.</p>
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -32,6 +43,17 @@ export default function HeroBanner() {
                 {badge}
               </span>
             ))}
+          </div>
+          {/* Barre de recherche globale */}
+          <div className="relative mt-4">
+            <input
+              type="text"
+              placeholder="Rechercher globalement..."
+              value={searchTerm}
+              onChange={handleSearch}
+              className="w-full rounded-2xl border-none bg-white/20 py-2 pl-4 pr-10 text-sm text-white placeholder-white/70 outline-none transition focus:ring-2 focus:ring-white/50"
+            />
+            <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
           </div>
         </div>
 

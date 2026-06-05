@@ -29,8 +29,8 @@ export default function UserDropdown() {
 
   if (!user) return null
 
-  const initials = user.name
-    .split(' ')
+  const initials = (user.username || 'User')
+    .split('')
     .map((n) => n[0])
     .join('')
     .toUpperCase()
@@ -52,7 +52,7 @@ export default function UserDropdown() {
           {initials}
         </div>
         <div className="hidden text-left sm:block">
-          <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{user.name}</p>
+          <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{user.username}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">{user.role ?? 'GESTIONNAIRE'}</p>
         </div>
         <ChevronDown className="h-4 w-4 text-slate-500 dark:text-slate-400" />
@@ -68,7 +68,7 @@ export default function UserDropdown() {
             className="absolute right-0 top-full z-40 mt-2 w-80 max-w-[calc(100vw-0.5rem)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700/60 dark:bg-slate-900"
           >
             <div className="border-b border-slate-200 p-4 dark:border-slate-700/60">
-              <p className="text-sm font-semibold text-slate-900 dark:text-white">{user.name}</p>
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">{user.username}</p>
               <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{user.email}</p>
               <div className="mt-2 flex items-center gap-2">
                 <span className="rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
