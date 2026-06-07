@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { fetchApplications, createApplication, deleteApplication, Application, ApplicationCreateData } from '../../api/applicationApi'
+import { fetchApplications, createApplication, deleteApplication, updateApplication, fetchApplicationById, Application, ApplicationCreateData } from '../../api/applicationApi'
 import { useAuth } from '../../hooks/useAuth'
 import { Layers, Plus, Trash2, Edit3, Eye, Search, Loader2, X, Globe, Calendar, User as UserIcon, Info } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -10,13 +10,18 @@ export default function ApplicationsPage() {
    const [showModal, setShowModal] = useState(false)
    const [searchTerm, setSearchTerm] = useState('')
    
-   const [formData, setFormData] = useState<ApplicationCreateData>({
-     nom: '',
-     description: '',
-     version: '',
-     environnement: 'PRODUCTION'
-   })
-   const [isSubmitting, setIsSubmitting] = useState(false)
+const [formData, setFormData] = useState<ApplicationCreateData>({
+      nom: '',
+      description: '',
+      version: '',
+      environnement: 'PRODUCTION'
+    })
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    
+    const [showViewModal, setShowViewModal] = useState(false)
+    const [showEditModal, setShowEditModal] = useState(false)
+    const [viewingApp, setViewingApp] = useState<Application | null>(null)
+    const [editingApp, setEditingApp] = useState<Application | null>(null)
 
    useEffect(() => {
      loadApplications()
@@ -49,15 +54,47 @@ export default function ApplicationsPage() {
      }
    }
 
-   const handleDelete = async (id: number) => {
-     if (!window.confirm("Supprimer cette application ?")) return
-     try {
-       await deleteApplication(id)
-       setApplications(applications.filter(a => a.id !== id))
-     } catch (err) {
-       alert("Erreur lors de la suppression")
-     }
-   }
+const handleDelete = async (id: number) => {
+      if (!window.confirm("Supprimer cette application ?")) return
+      try {
+        await deleteApplication(id)
+        setApplications(applications.filter(a => a.id !== id))
+      } catch (err) {
+        alert("Erreur lors de la suppression")
+      }
+    }
+    
+    const handleView = (app: Application) => {
+      setViewingApp(app)
+      setShowViewModal(true)
+    }
+    
+    const handleEdit = (app: Application) => {
+      setEditingApp(app)
+      setFormData({
+        nom: app.nom,
+        description: app.description,
+        version: app.version,
+        environnement: app.environnement
+      })
+      setShowEditModal(true)
+    }
+    
+    const handleUpdate = async (e: React.FormEvent) => {
+      e.preventDefault()
+      if (!editingApp) return
+      try {
+        setIsSubmitting(true)
+        const updated = await updateApplication(editingApp.id, formData)
+        setApplications(applications.map(a => a.id === editingApp.id ? updated : a))
+        setShowEditModal(false)
+        setEditingApp(null)
+      } catch (err) {
+        alert("Erreur lors de la mise à jour")
+      } finally {
+        setIsSubmitting(false)
+      }
+    }
 
    const filteredApps = applications.filter(a => 
      a.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -142,13 +179,13 @@ export default function ApplicationsPage() {
                          {new Date(app.dateCreation).toLocaleDateString()}
                        </div>
                      </td>
-                     <td className="rounded-r-3xl bg-slate-50/50 p-4 text-right dark:bg-slate-800/40">
-                       <div className="flex justify-end gap-1">
-                         <button className="p-2 text-slate-400 hover:text-sky-600 transition-colors" title="Voir"><Eye className="h-4 w-4" /></button>
-                         <button className="p-2 text-slate-400 hover:text-amber-600 transition-colors" title="Modifier"><Edit3 className="h-4 w-4" /></button>
-                         <button onClick={() => handleDelete(app.id)} className="p-2 text-slate-400 hover:text-rose-600 transition-colors" title="Supprimer"><Trash2 className="h-4 w-4" /></button>
-                       </div>
-                     </td>
+<td className="rounded-r-3xl bg-slate-50/50 p-4 text-right dark:bg-slate-800/40">
+                        <div className="flex justify-end gap-1">
+                          <button onClick={() => handleView(app)} className="p-2 text-slate-400 hover:text-sky-600 transition-colors" title="Voir"><Eye className="h-4 w-4" /></button>
+                          <button onClick={() => handleEdit(app)} className="p-2 text-slate-400 hover:text-amber-600 transition-colors" title="Modifier"><Edit3 className="h-4 w-4" /></button>
+                          <button onClick={() => handleDelete(app.id)} className="p-2 text-slate-400 hover:text-rose-600 transition-colors" title="Supprimer"><Trash2 className="h-4 w-4" /></button>
+                        </div>
+                      </td>
                    </motion.tr>
                  ))}
                </tbody>
@@ -233,7 +270,67 @@ export default function ApplicationsPage() {
              </motion.div>
            </div>
          )}
-       </AnimatePresence>
-     </div>
-   )
+</AnimatePresence>
+
+      <AnimatePresence>
+        {showViewModal && viewingApp && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-lg rounded-[2.5rem] bg-white p-6 shadow-2xl dark:bg-slate-900">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Détails de l'application</h3>
+                <button onClick={() => setShowViewModal(false)} className="text-slate-400 hover:text-slate-600"><X className="h-5 w-5" /></button>
+              </div>
+              <div className="space-y-3 text-sm">
+                <div><span className="font-semibold">Nom:</span> {viewingApp.nom}</div>
+                <div><span className="font-semibold">Version:</span> {viewingApp.version}</div>
+                <div><span className="font-semibold">Environnement:</span> {viewingApp.environnement}</div>
+                <div><span className="font-semibold">Date création:</span> {new Date(viewingApp.dateCreation).toLocaleDateString()}</div>
+                <div><span className="font-semibold">Description:</span> {viewingApp.description || '-'}</div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showEditModal && editingApp && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-2xl rounded-[2.5rem] bg-white p-8 shadow-2xl dark:bg-slate-900">
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Modifier l'application</h2>
+                <button onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-slate-600"><X className="h-6 w-6" /></button>
+              </div>
+              <form onSubmit={handleUpdate} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Nom</label>
+                    <input type="text" required value={formData.nom} onChange={(e) => setFormData({...formData, nom: e.target.value})} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-950" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Version</label>
+                    <input type="text" required value={formData.version} onChange={(e) => setFormData({...formData, version: e.target.value})} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-950" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Environnement</label>
+                  <select value={formData.environnement} onChange={(e) => setFormData({...formData, environnement: e.target.value})} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-950">
+                    <option value="DEVELOPPEMENT">Développement</option>
+                    <option value="STAGING">Staging</option>
+                    <option value="PRODUCTION">Production</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Description</label>
+                  <textarea value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-950" rows={3} />
+                </div>
+                <button disabled={isSubmitting} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-sky-600 py-4 font-bold text-white transition hover:bg-sky-700 disabled:opacity-50">
+                  {isSubmitting ? <Loader2 className="animate-spin" /> : "Mettre à jour"}
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
 }

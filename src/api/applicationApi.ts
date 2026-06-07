@@ -15,9 +15,9 @@ export type ApplicationCreateData = Omit<Application, 'id' | 'dateCreation'>
  * GET /applications : Liste toutes les applications
  */
 export async function fetchApplications() {
-  const response = await api.get<Application[]>('/applications')
-  return response.data
-}
+   const response = await api.get<{ content: Application[] }>('/applications')
+   return response.data.content || response.data
+ }
 
 /**
  * POST /applications : Créer une nouvelle application

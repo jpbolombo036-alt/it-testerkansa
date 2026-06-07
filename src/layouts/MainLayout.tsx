@@ -8,7 +8,7 @@ export default function MainLayout() {
       <Sidebar />
       <div className="flex min-h-screen w-full flex-col md:ml-72">
         <Header />
-        <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 pb-10 pt-20 sm:px-6 sm:pt-24 lg:px-10 lg:pt-28">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 pb-10 pt-20 sm:px-6 lg:px-10">{/* pt-20 = hauteur header */}
           <Outlet />
         </main>
       </div>

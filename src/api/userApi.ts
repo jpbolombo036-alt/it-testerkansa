@@ -21,9 +21,9 @@ export interface ChangePasswordData {
  * GET /users : Liste tous les utilisateurs
  */
 export async function fetchUsers() {
-  const response = await api.get<User[]>('/users')
-  return response.data
-}
+   const response = await api.get<{ content: User[] }>('/users')
+   return response.data.content || response.data
+ }
 
 /**
  * GET /users/me : Récupère le profil de l'utilisateur connecté

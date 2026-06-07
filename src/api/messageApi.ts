@@ -12,37 +12,36 @@ export interface Message {
 }
 
 export interface SendMessageData {
-  toUserId: number
+  receiverId: number
   content: string
 }
 
-/**
- * GET /messages : Liste tous les messages
- */
+export async function sendMessage(toUserId: number, content: string) {
+  const response = await api.post<Message>('/messages', { receiverId: toUserId, content })
+  return response.data
+}
+
+export async function sendAttachment(toUserId: number, content: string, file: File) {
+  const formData = new FormData()
+  formData.append('receiverId', toUserId.toString())
+  formData.append('content', content)
+  formData.append('attachment', file)
+  const response = await api.post<Message>('/messages', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+  return response.data
+}
+
 export async function fetchMessages() {
   const response = await api.get<Message[]>('/messages')
   return response.data
 }
 
-/**
- * GET /messages/conversation/{userId} : Récupère la conversation avec un utilisateur
- */
 export async function fetchConversation(userId: number) {
   const response = await api.get<Message[]>(`/messages/conversation/${userId}`)
   return response.data
 }
 
-/**
- * POST /messages : Envoie un nouveau message
- */
-export async function sendMessage(toUserId: number, content: string) {
-  const response = await api.post<Message>('/messages', { toUserId, content })
-  return response.data
-}
-
-/**
- * GET /messages/unread-count : Nombre de messages non lus
- */
 export async function fetchUnreadCount() {
   const response = await api.get<{ count: number }>('/messages/unread-count')
   return response.data

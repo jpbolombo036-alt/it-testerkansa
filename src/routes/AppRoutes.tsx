@@ -10,6 +10,7 @@ import RapportsPage from '../pages/Rapports'
 import TestsPage from '../pages/Tests'
 import TachesPage from '../pages/Taches'
 import UsersPage from '../pages/Users'
+import NotificationsPage from '../pages/Notifications'
 import MainLayout from '../layouts/MainLayout'
 import { useAuth } from '../hooks/useAuth'
 
@@ -32,6 +33,7 @@ function AppRoutes() {
         <Route path="rapports" element={<RapportsPage />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="profil" element={<ProfilPage />} />
+        <Route path="notifications" element={<NotificationsPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

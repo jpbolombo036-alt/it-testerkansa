@@ -1,17 +1,34 @@
 import api from './axios'
 
-export interface TestSession {
+export interface Test {
   id: number
-  nom: string
-  description: string
-  applicationId: number
-  environnement: string
-  version: string
+  sessionId: number
+  fonction: string
+  precondition: string
+  etapes: string
+  resultatAttendu: string
+  resultatObtenu: string
   statut: string
-  nom_document: string
+  commentaires?: string
 }
 
-export type TestSessionCreateData = Omit<TestSession, 'id'>
+export interface TestSession {
+   id: number
+   nom: string
+   description: string
+   applicationId?: number
+   environnement: string
+   version?: string
+   statut?: string
+   nom_document?: string
+   dateCreation: string
+   createdBy?: number
+   createdByUsername?: string
+   createdByRole?: string
+   tests?: Test[]
+  }
+  
+  export type TestSessionCreateData = Partial<TestSession>
 
 /**
  * GET /test-sessions : Liste toutes les sessions
@@ -49,5 +66,13 @@ export async function deleteTestSession(id: number) {
  */
 export async function fetchTestSessionById(id: number) {
   const response = await api.get<TestSession>(`/test-sessions/${id}`)
+  return response.data
+}
+
+/**
+ * GET /test-sessions/{id}/export : Récupère les données de la session pour l'export
+ */
+export async function exportTestSession(id: number) {
+  const response = await api.get<TestSession>(`/test-sessions/${id}/export`)
   return response.data
 }

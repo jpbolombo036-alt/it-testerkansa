@@ -15,9 +15,9 @@ export type AccountCreateData = Omit<Account, 'id'>
  * GET /comptes : Liste tous les comptes
  */
 export async function fetchAccounts() {
-  const response = await api.get<Account[]>('/comptes')
-  return response.data
-}
+   const response = await api.get<{ content: Account[] }>('/comptes')
+   return response.data.content || response.data
+ }
 
 /**
  * POST /comptes : Création d'un nouveau compte

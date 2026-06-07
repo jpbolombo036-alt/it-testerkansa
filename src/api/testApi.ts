@@ -1,21 +1,22 @@
 import api from './axios'
 
 export interface TestStep {
-  id: number
-  sessionId: number
-  applicationId?: number
-  applicationNom?: string
-  version?: string
-  environnement?: string
-  fonction: string
-  precondition?: string
-  etapes?: string
-  resultatAttendu?: string
-  resultatObtenu?: string
-  statut?: string
-  commentaires?: string
-  testNumber?: number
-}
+   id: number
+   sessionId: number
+   applicationId?: number
+   applicationNom?: string
+   version?: string
+   environnement?: string
+   fonction: string
+   precondition?: string
+   etapes?: string
+   resultatAttendu?: string
+   resultatObtenu?: string
+   statut?: string
+   commentaires?: string
+   testNumber?: number
+   dateCreation?: string
+ }
 
 export interface Bug {
   id: number
@@ -53,9 +54,9 @@ export async function fetchTestById(id: number) {
  * POST /tests : Créer un nouveau test
  */
 export async function createTest(data: Partial<TestStep>) {
-  const response = await api.post<TestStep>('/tests', data)
-  return response.data
-}
+   const response = await api.post<TestStep>('/tests', data)
+   return response.data
+ }
 
 /**
  * PUT /tests/{id} : Modifier un test existant

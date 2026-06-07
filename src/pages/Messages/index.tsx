@@ -1,19 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { fetchAvailableUsers } from '../../api/userApi'
-import { fetchConversation, sendMessage, Message } from '../../api/messageApi'
+import { fetchConversation, sendMessage, sendAttachment, Message } from '../../api/messageApi'
 import { User } from '../../hooks/useAuth'
-import { Send, Search, User as UserIcon, MessageSquare, Loader2 } from 'lucide-react'
+import { Send, Search, User as UserIcon, MessageSquare, Loader2, Paperclip } from 'lucide-react'
 
 export default function MessagesPage() {
-   const { user: currentUser } = useAuth()
-   const [users, setUsers] = useState<User[]>([])
-   const [selectedUser, setSelectedUser] = useState<User | null>(null)
-   const [messages, setMessages] = useState<Message[]>([])
-   const [newMessage, setNewMessage] = useState('')
-   const [isLoading, setIsLoading] = useState(false)
-   const [isSending, setIsSending] = useState(false)
-   const messagesEndRef = useRef<HTMLDivElement>(null)
+const { user: currentUser } = useAuth()
+    const [users, setUsers] = useState<User[]>([])
+    const [selectedUser, setSelectedUser] = useState<User | null>(null)
+    const [messages, setMessages] = useState<Message[]>([])
+    const [newMessage, setNewMessage] = useState('')
+    const [isLoading, setIsLoading] = useState(false)
+    const [isSending, setIsSending] = useState(false)
+    const [attachmentFile, setAttachmentFile] = useState<File | null>(null)
+    const messagesEndRef = useRef<HTMLDivElement>(null)
 
    useEffect(() => {
      fetchAvailableUsers().then(setUsers).catch(console.error)
@@ -43,24 +44,38 @@ export default function MessagesPage() {
      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
    }, [messages])
 
-   const handleSendMessage = async (e: React.FormEvent) => {
-     e.preventDefault()
-     if (!selectedUser || !newMessage.trim() || isSending) return
+const handleSendMessage = async (e: React.FormEvent) => {
+      e.preventDefault()
+      if (!selectedUser || (!newMessage.trim() && !attachmentFile) || isSending) return
 
-     try {
-       setIsSending(true)
-       await sendMessage(selectedUser.id, newMessage)
-       const updatedMessages = await fetchConversation(selectedUser.id)
-       setMessages(updatedMessages)
-       setNewMessage('')
-     } catch (err) {
-       console.error("Erreur envoi", err)
-     } finally {
-       setIsSending(false)
-     }
-   }
+      try {
+        setIsSending(true)
+        if (attachmentFile) {
+          await sendAttachment(selectedUser.id, newMessage, attachmentFile)
+        } else {
+          await sendMessage(selectedUser.id, newMessage)
+        }
+        const updatedMessages = await fetchConversation(selectedUser.id)
+        setMessages(updatedMessages)
+        setNewMessage('')
+        setAttachmentFile(null)
+        const fileInput = document.getElementById('attachment-input') as HTMLInputElement
+        if (fileInput) fileInput.value = ''
+      } catch (err) {
+        console.error("Erreur envoi", err)
+      } finally {
+        setIsSending(false)
+      }
+    }
 
-   if (!currentUser) return null
+    const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (file) {
+        setAttachmentFile(file)
+      }
+    }
+
+  if (!currentUser) return null
 
    return (
      <div className="flex h-[calc(100-2rem)] gap-6 p-6">
@@ -142,23 +157,36 @@ export default function MessagesPage() {
                <div ref={messagesEndRef} />
              </div>
 
-             <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-100 dark:border-slate-800">
-               <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 rounded-2xl p-2 px-4 focus-within:ring-2 focus-within:ring-sky-100 dark:focus-within:ring-sky-900/30">
-                 <input
-                   value={newMessage}
-                   onChange={(e) => setNewMessage(e.target.value)}
-                   placeholder="Écrivez votre message..."
-                   className="flex-1 bg-transparent border-none outline-none text-sm py-2 dark:text-slate-200"
-                 />
-                 <button
-                   type="submit"
-                   disabled={!newMessage.trim() || isSending}
-                   className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-600 text-white transition hover:bg-sky-700 disabled:opacity-50"
-                 >
-                   {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-                 </button>
-               </div>
-             </form>
+<form onSubmit={handleSendMessage} className="p-4 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 rounded-2xl p-2 px-4 focus-within:ring-2 focus-within:ring-sky-100 dark:focus-within:ring-sky-900/30">
+                  <input
+                    type="file"
+                    id="attachment-input"
+                    accept="image/*,audio/*"
+                    onChange={handleAttachmentChange}
+                    className="hidden"
+                  />
+                  <label htmlFor="attachment-input" className="cursor-pointer p-2 text-slate-400 hover:text-sky-600" title="Joindre un fichier">
+                    <Paperclip className="h-5 w-5" />
+                  </label>
+                  <input
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder={attachmentFile ? "Ajouter un commentaire (optionnel)..." : "Écrivez votre message..."}
+                    className="flex-1 bg-transparent border-none outline-none text-sm py-2 dark:text-slate-200"
+                  />
+                  {attachmentFile && (
+                    <span className="text-xs text-sky-600 truncate max-w-24">{attachmentFile.name}</span>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={!newMessage.trim() && !attachmentFile || isSending}
+                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-600 text-white transition hover:bg-sky-700 disabled:opacity-50"
+                  >
+                    {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                  </button>
+                </div>
+              </form>
            </>
          ) : (
            <div className="flex h-full flex-col items-center justify-center text-slate-400 space-y-4">
