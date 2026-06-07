@@ -1,5 +1,16 @@
 import api from './axios'
-import { User } from '../types/user'
+
+export interface User {
+  id: number
+  email: string
+  role: string
+  username: string
+  isActive: boolean
+  profilePhoto?: string
+  lastPhoneVersion?: string
+  createdAt?: string
+  password?: string
+}
 
 export interface ChangePasswordData {
   oldPassword: string
@@ -7,7 +18,7 @@ export interface ChangePasswordData {
 }
 
 /**
- * Liste tous les utilisateurs (Admin uniquement)
+ * GET /users : Liste tous les utilisateurs
  */
 export async function fetchUsers() {
   const response = await api.get<User[]>('/users')
@@ -39,14 +50,6 @@ export async function changePassword(passwordData: ChangePasswordData) {
 }
 
 /**
- * GET /users/available : Liste les utilisateurs pour démarrer une conversation
- */
-export async function fetchAvailableUsers() {
-  const response = await api.get<User[]>('/users/available')
-  return response.data
-}
-
-/**
  * PATCH /users/{id}/toggle-status : Active/Désactive un compte (Admin)
  */
 export async function toggleUserStatus(userId: number) {
@@ -64,7 +67,15 @@ export async function deleteUser(userId: number) {
 /**
  * POST /users : Créer un nouvel utilisateur (Admin)
  */
-export async function createUser(userData: Partial<User> & { password?: string }) {
+export async function createUser(userData: { username: string; email: string; password?: string; role?: string; isActive?: boolean }) {
   const response = await api.post<User>('/users', userData)
+  return response.data
+}
+
+/**
+ * GET /users/available : Liste les utilisateurs disponibles pour la messagerie
+ */
+export async function fetchAvailableUsers() {
+  const response = await api.get<User[]>('/users/available')
   return response.data
 }

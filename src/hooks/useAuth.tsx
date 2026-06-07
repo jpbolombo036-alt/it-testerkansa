@@ -1,17 +1,12 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import api from '../api/axios'
-
-interface User {
-  id: number
-  email: string
-  role: 'ADMIN' | 'USER'
-  username: string
-}
+import { User, fetchMe } from '../api/userApi'
+export type { User } // Ré-export pour la compatibilité
 
 interface AuthContextType {
   user: User | null
   isAuthenticated: boolean
-  login: (email: string, password: string) => Promise<void>
+  login: (username: string, password: string) => Promise<void>
   logout: () => void
 }
 
@@ -28,10 +23,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const token = localStorage.getItem('token')
       if (token) {
         try {
-          const response = await api.get('/users/me')
-          setUser(response.data)
+          const data = await fetchMe()
+          setUser(data)
           setIsAuthenticated(true)
         } catch (err) {
+          console.error("Auth: Session validation failed, logging out...", err);
           localStorage.removeItem('token')
           setUser(null)
           setIsAuthenticated(false)
@@ -42,23 +38,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkSession()
   }, [])
 
-  const login = async (username: string, password: string) => {
-    // Appel API réel vers le backend
-    const response = await api.post('/auth/token', { username, password })
-    const { token, user: userData } = response.data
-    
+  const login = useCallback(async (username: string, password: string) => {
+    const response = await api.post<{ accessToken: string }>('/auth/token', { username, password })
+
+    if (!response.data?.accessToken) {
+      throw new Error("Authentification échouée : Aucun token reçu.");
+    }
+
+    const { accessToken: token } = response.data
+
+    const userResponse = await api.get<User>('/users/me')
+    const userData = userResponse.data
+
+    if (!userData) {
+      throw new Error("Données utilisateur manquantes dans la réponse API.");
+    }
+
     localStorage.setItem('token', token)
     setUser(userData)
     setIsAuthenticated(true)
-  }
+  }, [])
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('token')
     setUser(null)
     setIsAuthenticated(false)
-  }
+  }, [])
 
-  // Empêche l'affichage de l'app tant que la vérification du token n'est pas faite
   if (isChecking && localStorage.getItem('token')) {
     return <div className="flex h-screen items-center justify-center bg-slate-950 text-white">Vérification de la session...</div>
   }

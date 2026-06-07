@@ -28,10 +28,24 @@ export async function createAccount(accountData: AccountCreateData) {
 }
 
 /**
+ * PUT /comptes/{id} : Mise à jour d'un compte existant
+ */
+export async function updateAccount(id: number, accountData: AccountCreateData) {
+  const response = await api.put<Account>(`/comptes/${id}`, accountData)
+  return response.data
+}
+
+/**
  * DELETE /comptes/{id} : Supprime un compte
  */
 export async function deleteAccount(id: number) {
   await api.delete(`/comptes/${id}`)
 }
 
-// Note: Si vous avez un endpoint de mise à jour, vous pourriez ajouter updateAccount ici.
+/**
+ * GET /comptes/{id} : Récupère un compte par ID
+ */
+export async function fetchAccountById(id: number) {
+  const response = await api.get<Account>(`/comptes/${id}`)
+  return response.data
+}

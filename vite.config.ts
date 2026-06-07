@@ -6,4 +6,10 @@ export default defineConfig({
   server: {
     port: 4173,
   },
+  build: {
+    esbuild: {
+      pure: ['console.log', 'console.info', 'console.debug'],
+      drop: ['debugger'],
+    },
+  },
 })

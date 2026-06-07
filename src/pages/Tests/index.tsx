@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { fetchTestSteps, updateTestResult, reportBug, TestStep, Bug } from '../../api/testApi'
+import { fetchTestSteps, updateTest, reportBug, TestStep, Bug } from '../../api/testApi'
 import { CheckCircle, XCircle, AlertTriangle, Bug as BugIcon, Loader2, ClipboardCheck } from 'lucide-react'
 
 export default function TestsPage() {
@@ -9,8 +9,7 @@ export default function TestsPage() {
   const [reportingBugFor, setReportingBugFor] = useState<number | null>(null)
   const [bugDescription, setBugDescription] = useState('')
 
-  // sessionId est ici codé en dur pour l'exemple, à récupérer via les URL params normalement
-  const sessionId = 1 
+  const sessionId = 1
 
   useEffect(() => {
     loadSteps()
@@ -28,11 +27,11 @@ export default function TestsPage() {
     }
   }
 
-  const handleStatusChange = async (stepId: number, status: 'PASSED' | 'FAILED') => {
+  const handleStatusChange = async (stepId: number, statut: string) => {
     try {
-      await updateTestResult(stepId, status)
-      setSteps(steps.map(s => s.id === stepId ? { ...s, status } : s))
-      if (status === 'FAILED') {
+      await updateTest(stepId, { statut })
+      setSteps(steps.map(s => s.id === stepId ? { ...s, statut } : s))
+      if (statut === 'FAILED') {
         setReportingBugFor(stepId)
       }
     } catch (err) {
@@ -84,16 +83,17 @@ export default function TestsPage() {
           <div 
             key={step.id} 
             className={`rounded-[2rem] border bg-white p-6 shadow-soft transition-all dark:bg-slate-900 ${
-              step.status === 'PASSED' ? 'border-emerald-100 dark:border-emerald-900/30' : 
-              step.status === 'FAILED' ? 'border-rose-100 dark:border-rose-900/30' : 'border-slate-100 dark:border-slate-800'
+              step.statut === 'PASSED' ? 'border-emerald-100 dark:border-emerald-900/30' : 
+              step.statut === 'FAILED' ? 'border-rose-100 dark:border-rose-900/30' : 'border-slate-100 dark:border-slate-800'
             }`}
           >
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="space-y-1">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{step.stepName}</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">{step.description}</p>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{step.fonction}</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">{step.precondition}</p>
+                <p className="text-xs text-slate-500 mt-2">{step.etapes}</p>
                 <div className="mt-2 inline-block rounded-lg bg-slate-50 px-3 py-1 text-xs font-medium text-slate-500 dark:bg-slate-800">
-                  Attendu : {step.expectedResult}
+                  Résultat attendu : {step.resultatAttendu}
                 </div>
               </div>
 
@@ -101,7 +101,7 @@ export default function TestsPage() {
                 <button
                   onClick={() => handleStatusChange(step.id, 'PASSED')}
                   className={`flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition ${
-                    step.status === 'PASSED' 
+                    step.statut === 'PASSED' 
                       ? 'bg-emerald-600 text-white' 
                       : 'bg-slate-100 text-slate-600 hover:bg-emerald-50 dark:bg-slate-800 dark:text-slate-400'
                   }`}
@@ -112,7 +112,7 @@ export default function TestsPage() {
                 <button
                   onClick={() => handleStatusChange(step.id, 'FAILED')}
                   className={`flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition ${
-                    step.status === 'FAILED' 
+                    step.statut === 'FAILED' 
                       ? 'bg-rose-600 text-white' 
                       : 'bg-slate-100 text-slate-600 hover:bg-rose-50 dark:bg-slate-800 dark:text-slate-400'
                   }`}
@@ -123,7 +123,6 @@ export default function TestsPage() {
               </div>
             </div>
 
-            {/* Formulaire de rapport de bug inline */}
             {reportingBugFor === step.id && (
               <motion.form 
                 initial={{ height: 0, opacity: 0 }}

@@ -15,12 +15,11 @@ function getFormattedDate() {
 }
 
 export default function HeroBanner() {
-  const [searchTerm, setSearchTerm] = useState(''); // Nouvel état pour le terme de recherche
+  const [searchTerm, setSearchTerm] = useState('');
   const { user } = useAuth()
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-    // Ici, vous déclencheriez la logique de recherche globale (par exemple, un appel API ou un filtre local)
   };
   return (
     <motion.section
@@ -32,7 +31,7 @@ export default function HeroBanner() {
       <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="w-full max-w-2xl space-y-5">
           <p className="text-xs uppercase tracking-[0.24em] text-sky-100/80 sm:text-sm">
-            Bonjour, {user?.username || 'admin'}
+            Bonjour, {user?.username || 'Utilisateur'}
           </p>
           <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">Bienvenue dans votre console IT Access Manager</h2>
           <p className="max-w-xl text-sm text-slate-100/90 sm:text-base">Contrôlez les applications, comptes, tests et sessions de votre organisation avec une vue centralisée et des métriques claires.</p>
@@ -44,7 +43,6 @@ export default function HeroBanner() {
               </span>
             ))}
           </div>
-          {/* Barre de recherche globale */}
           <div className="relative mt-4">
             <input
               type="text"
@@ -66,7 +64,9 @@ export default function HeroBanner() {
           </div>
           <div className="absolute bottom-4 left-4 rounded-3xl bg-white/15 px-3 py-2 text-xs text-slate-100 shadow-inner sm:bottom-6 sm:left-6 sm:px-4 sm:py-3 sm:text-sm">
             <p className="text-[10px] uppercase tracking-[0.22em] text-slate-200/80 sm:text-xs">Statut</p>
-            <p className="mt-1 text-xs font-medium sm:mt-1 sm:text-sm">Super administrateur</p>
+            <p className="mt-1 text-xs font-medium sm:mt-1 sm:text-sm">
+              {user?.role === 'ADMIN' ? 'Super administrateur' : 'Utilisateur'}
+            </p>
           </div>
         </motion.div>
       </div>

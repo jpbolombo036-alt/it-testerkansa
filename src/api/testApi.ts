@@ -2,10 +2,19 @@ import api from './axios'
 
 export interface TestStep {
   id: number
-  stepName: string
-  description: string
-  status: 'PENDING' | 'PASSED' | 'FAILED'
-  expectedResult: string
+  sessionId: number
+  applicationId?: number
+  applicationNom?: string
+  version?: string
+  environnement?: string
+  fonction: string
+  precondition?: string
+  etapes?: string
+  resultatAttendu?: string
+  resultatObtenu?: string
+  statut?: string
+  commentaires?: string
+  testNumber?: number
 }
 
 export interface Bug {
@@ -25,11 +34,42 @@ export async function fetchTestSteps(sessionId: number) {
 }
 
 /**
- * POST /tests : Enregistre le résultat d'un test
+ * GET /tests : Liste tous les tests
  */
-export async function updateTestResult(stepId: number, status: 'PASSED' | 'FAILED') {
-  const response = await api.post('/tests', { stepId, status })
+export async function fetchAllTests() {
+  const response = await api.get<TestStep[]>('/tests')
   return response.data
+}
+
+/**
+ * GET /tests/{id} : Récupère un test par ID
+ */
+export async function fetchTestById(id: number) {
+  const response = await api.get<TestStep>(`/tests/${id}`)
+  return response.data
+}
+
+/**
+ * POST /tests : Créer un nouveau test
+ */
+export async function createTest(data: Partial<TestStep>) {
+  const response = await api.post<TestStep>('/tests', data)
+  return response.data
+}
+
+/**
+ * PUT /tests/{id} : Modifier un test existant
+ */
+export async function updateTest(id: number, data: Partial<TestStep>) {
+  const response = await api.put<TestStep>(`/tests/${id}`, data)
+  return response.data
+}
+
+/**
+ * DELETE /tests/{id} : Supprimer un test
+ */
+export async function deleteTest(id: number) {
+  await api.delete(`/tests/${id}`)
 }
 
 /**

@@ -30,11 +30,8 @@ export default function UserDropdown() {
   if (!user) return null
 
   const initials = (user.username || 'User')
-    .split('')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
     .slice(0, 2)
+    .toUpperCase()
 
   const handleLogout = () => {
     setOpen(false)
@@ -74,11 +71,6 @@ export default function UserDropdown() {
                 <span className="rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
                   {user.role ?? 'GESTIONNAIRE'}
                 </span>
-                {(user.site || user.agency) && (
-                  <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-medium text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300">
-                    {user.site ?? user.agency}
-                  </span>
-                )}
               </div>
             </div>
 
