@@ -137,7 +137,7 @@ function LoginPage() {
 
         <div className="mt-8 space-y-4 border-t border-slate-200 pt-6 dark:border-slate-800">
           <p className="text-center text-xs text-slate-500 dark:text-slate-400">
-            Compte admin par défaut : <span className="font-mono font-medium">admin / admin123</span>
+            Concept by: <span className="font-mono font-medium"> Ir Jp bolombo</span>
           </p>
         </div>
       </motion.div>

@@ -17,7 +17,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
   const [isChecking, setIsChecking] = useState<boolean>(true)
 
-  // Vérifie si l'utilisateur est toujours connecté au chargement de l'application
   useEffect(() => {
     const checkSession = async () => {
       const token = localStorage.getItem('token')
@@ -47,6 +46,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { accessToken: token } = response.data
 
+    localStorage.setItem('token', token)
+
     const userResponse = await api.get<User>('/users/me')
     const userData = userResponse.data
 
@@ -54,7 +55,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error("Données utilisateur manquantes dans la réponse API.");
     }
 
-    localStorage.setItem('token', token)
     setUser(userData)
     setIsAuthenticated(true)
   }, [])
