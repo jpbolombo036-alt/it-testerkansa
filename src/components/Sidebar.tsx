@@ -27,7 +27,12 @@ export const menuItems = [
 export default function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 z-20 hidden h-screen w-72 flex-col overflow-y-auto border-r border-slate-200 bg-white/95 px-6 py-8 shadow-soft backdrop-blur-xl transition-colors duration-300 dark:border-slate-800 dark:bg-slate-950/95 md:flex">
-      <div className="mb-10 flex items-center gap-3 rounded-3xl bg-slate-50 px-4 py-4 shadow-sm transition-colors duration-300 dark:bg-slate-900">
+      <motion.div
+        initial={{ opacity: 0, x: -20 }} // Animation d'entrée depuis la gauche
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }} // Légère temporisation pour un effet plus doux
+        className="mb-10 flex items-center gap-3 rounded-[2.5rem] bg-white p-4 shadow-soft transition-colors duration-300 dark:bg-slate-900"
+      >
         <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">
           <ShieldCheck className="h-6 w-6" />
         </div>
@@ -35,7 +40,7 @@ export default function Sidebar() {
           <p className="text-sm font-semibold text-slate-700 dark:text-slate-100">IT Access Manager</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">Gestion des accès</p>
         </div>
-      </div>
+      </motion.div>
 
       <nav className="space-y-2">
         {menuItems.map((item) => {

@@ -219,25 +219,32 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
    
    return (
      <div className="space-y-8 p-6">
-       <div className="flex items-center justify-between">
-         <div className="flex items-center gap-4">
-           <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-             <ClipboardCheck className="h-10 w-10" />
+       <motion.div
+         initial={{ opacity: 0, y: -20 }}
+         animate={{ opacity: 1, y: 0 }}
+         transition={{ duration: 0.5 }}
+         className="rounded-[2.5rem] bg-white p-6 shadow-soft dark:bg-slate-900"
+       >
+         <div className="flex items-center justify-between">
+           <div className="flex items-center gap-4">
+             <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+               <ClipboardCheck className="h-10 w-10" />
+             </div>
+             <div>
+               <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Sessions de Test</h1>
+               <p className="text-slate-500 dark:text-slate-400">Gérez les sessions et les exécutions de tests</p>
+             </div>
            </div>
-           <div>
-             <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Sessions de Test</h1>
-             <p className="text-slate-500 dark:text-slate-400">Gérez les sessions et les exécutions de tests</p>
-           </div>
+           
+           <button
+             onClick={() => setShowSessionForm(!showSessionForm)}
+             className="flex items-center gap-2 rounded-2xl bg-sky-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-sky-700"
+           >
+             <Plus className="h-5 w-5" />
+             Nouvelle session
+           </button>
          </div>
-         
-         <button
-           onClick={() => setShowSessionForm(!showSessionForm)}
-           className="flex items-center gap-2 rounded-2xl bg-sky-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-sky-700"
-         >
-           <Plus className="h-5 w-5" />
-           Nouvelle session
-         </button>
-       </div>
+       </motion.div>
        
        <AnimatePresence>
          {showSessionForm && (
@@ -490,64 +497,69 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
            </AnimatePresence>
            
 <div className="hidden sm:block overflow-x-auto">
-              <table className="w-full text-left border-separate border-spacing-y-2">
+              <table className="w-full text-left border-separate border-spacing-y-4">
                 <thead>
-                  <tr className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    <th className="px-3 pb-2">Fonction</th>
-                    <th className="px-3 pb-2">Précondition</th>
-                    <th className="px-3 pb-2">Étapes</th>
-                    <th className="px-3 pb-2">Résultat attendu</th>
-                    <th className="px-3 pb-2">Résultat obtenu</th>
-                    <th className="px-3 pb-2">Statut</th>
-                    <th className="px-3 pb-2 text-right">Actions</th>
+                  <tr className="text-xs font-extrabold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
+                    <th className="px-6 py-3">Fonction</th>
+                    <th className="px-6 py-3">Précondition</th>
+                    <th className="px-6 py-3">Étapes</th>
+                    <th className="px-6 py-3">Résultat attendu</th>
+                    <th className="px-6 py-3">Résultat obtenu</th>
+                    <th className="px-6 py-3">Statut</th>
+                    <th className="px-6 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {selectedSessionTests.map((step) => (
-                    <motion.tr layout key={step.id} className="group">
-                      <td className="rounded-l-2xl bg-slate-50/50 p-3 dark:bg-slate-800/40">
-                        <p className="text-sm font-bold text-slate-900 dark:text-white">{step.fonction}</p>
+                    <motion.tr 
+                      layout 
+                      key={step.id} 
+                      className="group transition-all duration-300 hover:translate-x-1"
+                    >
+                      <td className="rounded-l-[1.5rem] bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors shadow-sm group-hover:shadow-md">
+                        <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{step.fonction}</p>
                       </td>
-                      <td className="bg-slate-50/50 p-3 dark:bg-slate-800/40">
-                        <p className="text-xs text-slate-500 truncate max-w-[120px]">{step.precondition}</p>
+                      <td className="bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors shadow-sm group-hover:shadow-md">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 max-w-[150px]">{step.precondition || '-'}</p>
                       </td>
-                      <td className="bg-slate-50/50 p-3 dark:bg-slate-800/40">
-                        <p className="text-xs text-slate-500 truncate max-w-[150px]">{step.etapes}</p>
+                      <td className="bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors shadow-sm group-hover:shadow-md">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 max-w-[200px]">{step.etapes}</p>
                       </td>
-                      <td className="bg-slate-50/50 p-3 dark:bg-slate-800/40">
-                        <p className="text-xs text-slate-500 truncate max-w-[120px]">{step.resultatAttendu}</p>
+                      <td className="bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors shadow-sm group-hover:shadow-md">
+                        <p className="text-xs text-slate-600 dark:text-slate-300 font-medium line-clamp-2 max-w-[150px]">{step.resultatAttendu}</p>
                       </td>
-                      <td className="bg-slate-50/50 p-3 dark:bg-slate-800/40">
-                        <p className="text-xs text-slate-500 truncate max-w-[120px]">{step.resultatObtenu}</p>
+                      <td className="bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors shadow-sm group-hover:shadow-md">
+                        <p className="text-xs text-slate-600 dark:text-slate-300 font-medium line-clamp-2 max-w-[150px]">{step.resultatObtenu || '-'}</p>
                       </td>
-                      <td className="bg-slate-50/50 p-3 dark:bg-slate-800/40">
-                        <span className={`rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase ${
+                      <td className="bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors shadow-sm group-hover:shadow-md">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider ${
                           step.statut === 'OK' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' :
                           step.statut === 'BUG' ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300' :
-                          'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'
+                          'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'
                         }`}>
+                          <span className={`mr-1.5 h-1.5 w-1.5 rounded-full ${step.statut === 'OK' ? 'bg-emerald-500' : step.statut === 'BUG' ? 'bg-rose-500' : 'bg-amber-500'}`} />
                           {step.statut}
                         </span>
                       </td>
-                      <td className="rounded-r-2xl bg-slate-50/50 p-3 text-right dark:bg-slate-800/40">
-                        <div className="flex justify-end gap-1">
+                      <td className="rounded-r-[1.5rem] bg-slate-50/50 p-5 text-right dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors shadow-sm group-hover:shadow-md">
+                        <div className="flex justify-end gap-2">
                           <button 
                             onClick={() => handleViewTest(step)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-sky-600 transition-colors"
+                            className="p-2 rounded-xl text-slate-400 hover:bg-sky-50 hover:text-sky-600 dark:hover:bg-sky-900/30 transition-all"
                             title="Voir"
                           >
                             <Eye className="h-3.5 w-3.5" />
                           </button>
                           <button 
                             onClick={() => handleEditTest(step)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 transition-colors"
+                            className="p-2 rounded-xl text-slate-400 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-900/30 transition-all"
                             title="Modifier"
                           >
                             <Edit3 className="h-3.5 w-3.5" />
                           </button>
                           <button 
                             onClick={() => handleDeleteTest(step.id)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 transition-colors"
+                            className="p-2 rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/30 transition-all"
                             title="Supprimer"
                           >
                             <Trash2 className="h-3.5 w-3.5" />

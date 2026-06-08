@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { fetchAccounts, createAccount, updateAccount, deleteAccount, fetchAccountById, Account, AccountCreateData } from '../../api/accountApi'
 import { fetchApplications, Application } from '../../api/applicationApi'
-import { Folder, Trash2, Edit3, Eye, Plus, Loader2, X, Key } from 'lucide-react'
+import { Folder, Trash2, Edit3, Eye, Plus, Loader2, X, Key, Shield } from 'lucide-react'
+import { useToast } from '../../components/ToastProvider'
 
 export default function ComptesPage() {
   const [accounts, setAccounts] = useState<Account[]>([])
@@ -11,6 +12,7 @@ export default function ComptesPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { showToast } = useToast()
 
   const [formData, setFormData] = useState<AccountCreateData>({
     applicationId: 0,
@@ -48,8 +50,9 @@ export default function ComptesPage() {
     try {
       await deleteAccount(id)
       setAccounts(accounts.filter(a => a.id !== id))
+      showToast('success', 'Compte supprimé', 'L\'accès a été retiré avec succès.')
     } catch (err) {
-      alert("Erreur lors de la suppression")
+      showToast('error', 'Erreur', 'Impossible de supprimer le compte.')
     }
   }
 
@@ -84,8 +87,9 @@ export default function ComptesPage() {
       setShowForm(false)
       setEditingAccount(null)
       setFormData({ applicationId: 0, username: '', code: '', role: 'USER', commentaire: '' })
+      showToast('success', editingAccount ? 'Mis à jour' : 'Créé', 'Le compte a été enregistré avec succès.')
     } catch (err) {
-      alert("Erreur lors de l'enregistrement")
+      showToast('error', 'Erreur', 'Erreur lors de la sauvegarde des données.')
     } finally {
       setIsSubmitting(false)
     }
@@ -93,25 +97,32 @@ export default function ComptesPage() {
 
   return (
     <div className="space-y-8 p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-            <Folder className="h-10 w-10" />
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="rounded-[2.5rem] bg-white p-6 shadow-soft dark:bg-slate-900"
+      >
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+              <Key className="h-10 w-10" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Comptes d'accès</h1>
+              <p className="text-slate-500 dark:text-slate-400">Gérez les identifiants par application</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Comptes</h1>
-            <p className="text-slate-500 dark:text-slate-400">Gérez les accès et les rôles</p>
-          </div>
+          
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-emerald-700 w-full sm:w-auto"
+          >
+            <Plus className="h-5 w-5" />
+            Nouveau compte
+          </button>
         </div>
-        
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-emerald-700"
-        >
-          <Plus className="h-5 w-5" />
-          Nouveau compte
-        </button>
-      </div>
+      </motion.div>
 
       <AnimatePresence>
         {showForm && (
@@ -130,7 +141,7 @@ export default function ComptesPage() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold uppercase text-slate-500">Application</label>
                   <select
@@ -157,7 +168,7 @@ export default function ComptesPage() {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold uppercase text-slate-500">Nom d'utilisateur</label>
                   <input
@@ -201,74 +212,128 @@ export default function ComptesPage() {
         <div className="flex h-64 items-center justify-center">
           <Loader2 className="h-10 w-10 animate-spin text-emerald-600" />
         </div>
-      ) : (
-        <div className="rounded-[2.5rem] bg-white p-6 shadow-soft dark:bg-slate-900">
-          <table className="w-full text-left border-separate border-spacing-y-2">
-            <thead>
-              <tr className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                <th className="px-3 pb-2">Utilisateur</th>
-                <th className="px-3 pb-2">Application</th>
-                <th className="px-3 pb-2">Rôle</th>
-                <th className="px-3 pb-2">Statut</th>
-                <th className="px-3 pb-2 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {accounts.map(account => (
-                <motion.tr layout key={account.id} className="group">
-                  <td className="rounded-l-2xl bg-slate-50/50 p-3 dark:bg-slate-800/40">
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">{account.username}</p>
-                  </td>
-                  <td className="bg-slate-50/50 p-3 dark:bg-slate-800/40">
-                    <p className="text-xs text-slate-500">
-                      {applications.find(a => a.id === account.applicationId)?.nom || '-'}
-                    </p>
-                  </td>
-                  <td className="bg-slate-50/50 p-3 dark:bg-slate-800/40">
-                    <span className={`rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase ${
-                      account.role === 'ADMIN' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'
-                    }`}>
-                      {account.role}
-                    </span>
-                  </td>
-                  <td className="bg-slate-50/50 p-3 dark:bg-slate-800/40">
-                    <span className="rounded-lg bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">Actif</span>
-                  </td>
-                  <td className="rounded-r-2xl bg-slate-50/50 p-3 text-right dark:bg-slate-800/40">
-                    <div className="flex justify-end gap-1">
-                      <button 
-                        onClick={() => handleView(account)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-sky-600 transition-colors"
-                        title="Voir"
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                      </button>
-                      <button 
-                        onClick={() => handleEdit(account)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 transition-colors"
-                        title="Modifier"
-                      >
-                        <Edit3 className="h-3.5 w-3.5" />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(account.id)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 transition-colors"
-                        title="Supprimer"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-          {accounts.length === 0 && (
-            <div className="py-20 text-center text-slate-500">
-              <p className="text-sm">Aucun compte disponible.</p>
-            </div>
-          )}
+      ) : accounts.length === 0 ? (
+        <div className="py-20 text-center text-slate-500">
+          <p className="text-sm">Aucun compte disponible.</p>
         </div>
+      ) : (
+        <>
+          {/* Desktop/Tablet Table View */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full text-left border-separate border-spacing-y-4">
+              <thead>
+                <tr className="text-xs font-extrabold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
+                  <th className="px-6 py-3">Utilisateur</th>
+                  <th className="px-6 py-3">Application</th>
+                  <th className="px-6 py-3">Rôle</th>
+                  <th className="px-6 py-3">Statut</th>
+                  <th className="px-6 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {accounts.map(account => (
+                  <motion.tr 
+                    layout 
+                    key={account.id} 
+                    className="group transition-all duration-300 hover:translate-x-1"
+                  >
+                    <td className="rounded-l-[1.5rem] bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-all shadow-sm group-hover:shadow-md">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white font-extrabold text-emerald-600 shadow-sm dark:bg-slate-950 dark:text-emerald-400">
+                          {account.username.charAt(0).toUpperCase()}
+                        </div>
+                        <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{account.username}</p>
+                      </div>
+                    </td>
+                    <td className="bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-all shadow-sm group-hover:shadow-md">
+                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                        {applications.find(a => a.id === account.applicationId)?.nom || '-'}
+                      </p>
+                    </td>
+                    <td className="bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-all shadow-sm group-hover:shadow-md">
+                      <span className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider ${
+                        account.role === 'ADMIN' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {account.role}
+                      </span>
+                    </td>
+                    <td className="bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-all shadow-sm group-hover:shadow-md">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-extrabold uppercase text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        Actif
+                      </span>
+                    </td>
+                    <td className="rounded-r-[1.5rem] bg-slate-50/50 p-5 text-right dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-all shadow-sm group-hover:shadow-md">
+                      <div className="flex justify-end gap-2">
+                        <button 
+                          onClick={() => handleView(account)}
+                          className="p-2.5 rounded-xl text-slate-400 hover:bg-sky-50 hover:text-sky-600 dark:hover:bg-sky-900/30 transition-all"
+                          title="Voir"
+                        >
+                          <Eye className="h-4.5 w-4.5" />
+                        </button>
+                        <button 
+                          onClick={() => handleEdit(account)}
+                          className="p-2.5 rounded-xl text-slate-400 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-900/30 transition-all"
+                          title="Modifier"
+                        >
+                          <Edit3 className="h-4.5 w-4.5" />
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(account.id)}
+                          className="p-2.5 rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/30 transition-all"
+                          title="Supprimer"
+                        >
+                          <Trash2 className="h-4.5 w-4.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="sm:hidden grid gap-4">
+            {accounts.map((account) => (
+              <motion.div
+                layout
+                key={account.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-[2rem] bg-white p-5 shadow-soft dark:bg-slate-900 border border-slate-100 dark:border-slate-800"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 font-bold dark:bg-emerald-500/10">
+                      {account.username.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900 dark:text-slate-100">{account.username}</h3>
+                      <p className="text-[10px] font-extrabold uppercase text-slate-400">Rôle: {account.role}</p>
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-extrabold uppercase text-emerald-700">
+                    Actif
+                  </span>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-3 mb-4">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Application: <span className="font-bold text-slate-700 dark:text-slate-200">
+                      {applications.find(a => a.id === account.applicationId)?.nom || '-'}
+                    </span>
+                  </p>
+                </div>
+                <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <button onClick={() => handleView(account)} className="p-2 text-slate-400"><Eye className="h-5 w-5"/></button>
+                  <button onClick={() => handleEdit(account)} className="p-2 text-slate-400"><Edit3 className="h-5 w-5"/></button>
+                  <button onClick={() => handleDelete(account.id)} className="p-2 text-rose-400"><Trash2 className="h-5 w-5"/></button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </>
       )}
 
       <AnimatePresence>

@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { fetchMe, updateProfile, changePassword, User } from '../../api/userApi'
 import { User as UserIcon, Mail, Lock, Shield, Loader2, X, Save, Camera } from 'lucide-react'
+import { useToast } from '../../components/ToastProvider'
 
 export default function ProfilPage() {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const { showToast } = useToast()
 
   const [formData, setFormData] = useState({
     username: '',
@@ -48,8 +50,9 @@ export default function ProfilPage() {
       setIsSubmitting(true)
       const updated = await updateProfile(formData)
       setUser(updated)
+      showToast('success', 'Profil mis à jour', 'Vos informations ont été enregistrées.')
     } catch (err) {
-      alert("Erreur lors de la mise à jour")
+      showToast('error', 'Erreur', 'Impossible de mettre à jour le profil.')
     } finally {
       setIsSubmitting(false)
     }
@@ -58,7 +61,7 @@ export default function ProfilPage() {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert("Les mots de passe ne correspondent pas")
+      showToast('warning', 'Attention', 'Les mots de passe ne correspondent pas.')
       return
     }
     try {
@@ -68,9 +71,9 @@ export default function ProfilPage() {
       })
       setShowPasswordModal(false)
       setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' })
-      alert("Mot de passe mis à jour")
+      showToast('success', 'Mot de passe modifié', 'Votre sécurité a été mise à jour.')
     } catch (err) {
-      alert("Erreur lors du changement de mot de passe")
+      showToast('error', 'Échec', 'L\'ancien mot de passe est incorrect.')
     }
   }
 
@@ -85,17 +88,23 @@ export default function ProfilPage() {
   if (!user) return null
 
   return (
-    <div className="space-y-8 p-6">
-      <div className="flex items-center gap-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-          <UserIcon className="h-10 w-10" />
+    <div className="space-y-8 p-6"> {/* Main page container */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="rounded-[2.5rem] bg-white p-6 shadow-soft dark:bg-slate-900"
+      >
+        <div className="flex items-center gap-4">
+          <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+            <UserIcon className="h-10 w-10" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Mon Profil</h1>
+            <p className="text-slate-500 dark:text-slate-400">Gérez vos informations personnelles</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Mon Profil</h1>
-          <p className="text-slate-500 dark:text-slate-400">Gérez vos informations personnelles</p>
-        </div>
-      </div>
-
+      </motion.div>
       <div className="rounded-[2.5rem] bg-white p-6 shadow-soft dark:bg-slate-900">
         <form onSubmit={handleUpdateProfile} className="space-y-6">
           <div className="flex items-center gap-6">
