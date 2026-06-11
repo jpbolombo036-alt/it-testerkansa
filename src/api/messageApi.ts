@@ -26,9 +26,7 @@ export async function sendAttachment(toUserId: number, content: string, file: Fi
   formData.append('receiverId', toUserId.toString())
   formData.append('content', content)
   formData.append('attachment', file)
-  const response = await api.post<Message>('/messages', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  })
+  const response = await api.post<Message>('/messages', formData)
   return response.data
 }
 

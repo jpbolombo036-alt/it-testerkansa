@@ -62,23 +62,27 @@ export default function MobileMenu() {
               </div>
 
               <nav className="space-y-1">
-                {menuItems.map((item) => (
-                  <NavLink
-                    key={item.label}
-                    to={item.to}
-                    end={item.to === '/'}
-                    onClick={() => setOpen(false)}
-                    className={({ isActive }) =>
-                      `block rounded-2xl px-4 py-3 text-sm font-medium transition-colors duration-200 ${
-                        isActive
-                          ? 'bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300'
-                          : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800'
-                      }`
-                    }
-                  >
-                    {item.label}
-                  </NavLink>
-                ))}
+{menuItems.map((item) => {
+                    const Icon = item.icon
+                    return (
+                      <NavLink
+                        key={item.label}
+                        to={item.to}
+                        end={item.to === '/'}
+                        onClick={() => setOpen(false)}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-colors duration-200 ${
+                            isActive
+                              ? 'bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300'
+                              : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800'
+                          }`
+                        }
+                      >
+                        <Icon className="h-5 w-5" />
+                        {item.label}
+                      </NavLink>
+                    )
+                  })}
               </nav>
             </motion.aside>
           </>

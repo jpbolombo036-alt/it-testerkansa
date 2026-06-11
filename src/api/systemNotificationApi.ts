@@ -5,7 +5,7 @@ export interface SystemNotification {
   title: string
   message: string
   type: 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR'
-  isRead: boolean
+  read: boolean
   actionUrl?: string
   createdAt: string
 }

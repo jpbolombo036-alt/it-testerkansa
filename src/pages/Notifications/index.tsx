@@ -110,7 +110,7 @@ export default function NotificationsPage() {
                 layout
                 key={notification.id}
                 className={`rounded-2xl p-4 flex items-start gap-3 ${
-                  notification.isRead 
+                  notification.read 
                     ? 'bg-slate-50 dark:bg-slate-800/30' 
                     : 'bg-emerald-50/50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30'
                 }`}
@@ -121,7 +121,7 @@ export default function NotificationsPage() {
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{notification.message}</p>
                   <p className="text-[10px] text-slate-400 mt-2">{formatDate(notification.createdAt)}</p>
                 </div>
-                {!notification.isRead && (
+                {!notification.read && (
                   <button
                     onClick={() => handleMarkAsRead(notification.id)}
                     className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/30"

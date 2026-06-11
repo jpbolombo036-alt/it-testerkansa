@@ -7,6 +7,17 @@ export interface Todo {
   completed: boolean
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | string
   dueDate: string
+  createdBy?: number
+  createdByUsername?: string
+}
+
+export interface UserWithTodos {
+  id: number
+  username: string
+  email: string
+  role: string
+  isActive: boolean
+  todos: Todo[]
 }
 
 export type TodoCreateData = Omit<Todo, 'id'>
@@ -16,6 +27,11 @@ export type TodoCreateData = Omit<Todo, 'id'>
  */
 export async function fetchTodos() {
   const response = await api.get<Todo[]>('/todos')
+  return response.data
+}
+
+export async function fetchTodosGroupedByUser() {
+  const response = await api.get<UserWithTodos[]>('/todos/grouped-by-user')
   return response.data
 }
 

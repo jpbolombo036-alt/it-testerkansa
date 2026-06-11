@@ -1,15 +1,17 @@
 export interface User {
-  id: string
-  name: string
+  id: number
+  username: string
   email: string
   role?: string
-  agency?: string
-  site?: string
+  isActive?: boolean
+  profilePhoto?: string
+  lastPhoneVersion?: string
+  createdAt?: string
 }
 
 export interface AuthContextType {
   user: User | null
   isAuthenticated: boolean
-  login: (email: string, password: string) => Promise<void>
+  login: (username: string, password: string) => Promise<void>
   logout: () => void
 }

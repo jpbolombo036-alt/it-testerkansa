@@ -1,41 +1,44 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
-import ComptesPage from '../pages/comptes'
-import DashboardPage from '../pages/Dashboard'
-import LoginPage from '../pages/Login'
-import NotFoundPage from '../pages/NotFound'
+import React from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import ProtectedRoute from '../components/ProtectedRoute'
+import Dashboard from '../pages/Dashboard'
+import Login from '../pages/Login'
+import UsersAdminPage from '../pages/Users'
 import ApplicationsPage from '../pages/Applications'
-import MessagesPage from '../pages/Messages'
-import ProfilPage from '../pages/Profil'
-import RapportsPage from '../pages/Rapports'
+import ComptesPage from '../pages/comptes'
 import TestsPage from '../pages/Tests'
 import TachesPage from '../pages/Taches'
-import UsersPage from '../pages/Users'
+import MessagesPage from '../pages/Messages'
+import RapportsPage from '../pages/Rapports'
+import ProfilPage from '../pages/Profil'
 import NotificationsPage from '../pages/Notifications'
+import NotFoundPage from '../pages/NotFound'
 import MainLayout from '../layouts/MainLayout'
-import { useAuth } from '../hooks/useAuth'
 
-function AppRoutes() {
-  const { isAuthenticated } = useAuth()
-
+const AppRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route
-        path="/"
-        element={isAuthenticated ? <MainLayout /> : <Navigate to="/login" replace />}
-      >
-        <Route index element={<DashboardPage />} />
-        <Route path="applications" element={<ApplicationsPage />} />
-        <Route path="comptes" element={<ComptesPage />} />
-        <Route path="tests" element={<TestsPage />} />
-        <Route path="taches" element={<TachesPage />} />
-        <Route path="messages" element={<MessagesPage />} />
-        <Route path="rapports" element={<RapportsPage />} />
-        <Route path="users" element={<UsersPage />} />
-        <Route path="profil" element={<ProfilPage />} />
-        <Route path="notifications" element={<NotificationsPage />} />
+      <Route path="/login" element={<Login />} />
+      
+      {/* Routes avec layout principal - accessibles à tous les connectés */}
+      <Route element={<ProtectedRoute />}>
+        <Route element={<MainLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/applications" element={<ApplicationsPage />} />
+          <Route path="/comptes" element={<ComptesPage />} />
+          <Route path="/tests" element={<TestsPage />} />
+          <Route path="/taches" element={<TachesPage />} />
+          <Route path="/messages" element={<MessagesPage />} />
+          <Route path="/rapports" element={<RapportsPage />} />
+          <Route path="/profil" element={<ProfilPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/users" element={<UsersAdminPage />} />
+        </Route>
       </Route>
-      <Route path="*" element={<NotFoundPage />} />
+
+      <Route path="/404" element={<NotFoundPage />} />
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>
   )
 }

@@ -17,6 +17,13 @@ export interface DashboardStats {
   bugReports: number
 }
 
+export interface AgentPerformance {
+  agentName: string;
+  bugsFound: number;
+  testsExecuted: number;
+  bugRate: number; // (bugsFound / testsExecuted) * 100
+}
+
 export async function fetchDashboardStats(): Promise<DashboardStats> {
   const response = await api.get<DashboardStats>('/dashboard/stats')
   return response.data
