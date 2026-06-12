@@ -16,6 +16,8 @@ export interface TestStep {
    commentaires?: string
    testNumber?: number
    dateCreation?: string
+   createdBy?: number
+   createdByUsername?: string
    executeur?: string // Le nom d'utilisateur de l'agent
  }
 

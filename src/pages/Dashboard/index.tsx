@@ -38,7 +38,13 @@ export default function DashboardPage() {
         const tests: any[] = Array.isArray(testsData) ? testsData : [];
 
         let performance: AgentPerformance[] = users.map(u => {
-          const testsByAgent = tests.filter(t => t && t.executeur === u.username);
+          const testsByAgent = tests.filter(t =>
+            t && (
+              t.createdBy === u.id ||
+              t.executeur === u.username ||
+              t.createdByUsername === u.username
+            )
+          );
           const bugsByAgent = testsByAgent.filter(t => t.statut === 'BUG').length;
           
           return {
