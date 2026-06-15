@@ -7,7 +7,7 @@ const normalizeApiUrl = (url: string) => {
 const rawUrl = import.meta.env.VITE_API_BASE_URL;
 const API_URL = (rawUrl && rawUrl.trim() !== '')
   ? normalizeApiUrl(rawUrl.trim())
-  : "https://backend-java-s6d8.onrender.com";
+  : "https://itaccess-backend-production-5145.up.railway.app";
 
 const api = axios.create({
   baseURL: API_URL,
