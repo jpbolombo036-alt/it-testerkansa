@@ -11,11 +11,13 @@ import {
   ShieldCheck,
   UserCircle,
   Users,
+  Link,
 } from 'lucide-react'
 
 export const menuItems = [
   { label: 'Tableau de bord', to: '/', icon: LayoutDashboard },
   { label: 'Applications', to: '/applications', icon: Layers },
+  { label: 'Liens Web', to: '/application-links', icon: Link },
   { label: 'Comptes', to: '/comptes', icon: CreditCard },
   { label: 'Bloc Note', to: '/bloc-note', icon: StickyNote },
   { label: 'Tests', to: '/tests', icon: CheckSquare },

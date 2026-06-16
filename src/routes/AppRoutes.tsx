@@ -5,6 +5,7 @@ import Dashboard from '../pages/Dashboard'
 import Login from '../pages/Login'
 import UsersAdminPage from '../pages/Users'
 import ApplicationsPage from '../pages/Applications'
+import ApplicationLinksPage from '../pages/ApplicationLinks'
 import ComptesPage from '../pages/comptes'
 import TestsPage from '../pages/Tests'
 import TachesPage from '../pages/Taches'
@@ -25,6 +26,7 @@ const AppRoutes: React.FC = () => {
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/applications" element={<ApplicationsPage />} />
+          <Route path="/application-links" element={<ApplicationLinksPage />} />
           <Route path="/comptes" element={<ComptesPage />} />
           <Route path="/tests" element={<TestsPage />} />
           <Route path="/taches" element={<TachesPage />} />

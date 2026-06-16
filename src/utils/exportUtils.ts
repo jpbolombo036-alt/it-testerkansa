@@ -1,4 +1,5 @@
 import { TestSession } from '../api/testSessionApi'
+import { Todo, UserWithTodos } from '../api/todoApi'
 
 export const exportToPDF = (session: TestSession) => {
   const printWindow = window.open('', '_blank')
@@ -98,6 +99,88 @@ ${i + 1}. ${test.fonction}
   const a = document.createElement('a')
   a.href = url
   a.download = `session-${session.nom}.doc`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+ }
+
+export const exportTodosToPDF = (todos: Todo[], username?: string) => {
+  const printWindow = window.open('', '_blank')
+  if (!printWindow) return
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Export PDF - Tâches ${username ? `de ${username}` : ''}</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #009966; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 11px; }
+        th { background-color: #F5F6F8; font-weight: bold; }
+      </style>
+    </head>
+    <body>
+      <h1>Tâches ${username ? `de ${username}` : ''}</h1>
+      ${todos.length > 0 ? `
+      <table>
+        <thead>
+          <tr>
+            <th>Titre</th>
+            <th>Description</th>
+            <th>Priorité</th>
+            <th>Échéance</th>
+            <th>Statut</th>
+            <th>Créateur</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${todos.map(todo => `
+          <tr>
+            <td>${todo.title}</td>
+            <td>${todo.description || '-'}</td>
+            <td>${todo.priority}</td>
+            <td>${new Date(todo.dueDate).toLocaleDateString()}</td>
+            <td>${todo.completed ? 'Terminé' : 'En cours'}</td>
+            <td>${todo.createdByUsername || '-'}</td>
+          </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      ` : '<p>Aucune tâche à exporter</p>'}
+      
+      <script>window.onload = () => { window.print(); }</script>
+    </body>
+    </html>
+  `
+  
+  printWindow.document.write(html)
+  printWindow.document.close()
+}
+
+export const exportTodosToWord = (todos: Todo[], username?: string) => {
+  const content = `
+Tâches ${username ? `de ${username}` : ''}
+================================
+
+${todos.length > 0 ? 
+  todos.map((todo, i) => `
+${i + 1}. ${todo.title}
+   Description: ${todo.description || '-'}
+   Priorité: ${todo.priority}
+   Échéance: ${new Date(todo.dueDate).toLocaleDateString()}
+   Statut: ${todo.completed ? 'Terminé' : 'En cours'}
+   Créateur: ${todo.createdByUsername || '-'}
+`).join('') : 'Aucune tâche à exporter'}
+`
+
+  const blob = new Blob([content], { type: 'application/msword' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `taches-${username || 'tous'}.doc`
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)

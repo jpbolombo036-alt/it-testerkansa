@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { fetchTodos, fetchTodosGroupedByUser, createTodo, updateTodo, deleteTodo, toggleTodo, Todo, TodoCreateData, UserWithTodos } from '../../api/todoApi'
-import { FileText, Plus, Trash2, Edit3, Eye, Search, Loader2, X, Calendar, AlertCircle, CheckCircle2, Clock, UserCircle, Users } from 'lucide-react'
+import { FileText, Plus, Trash2, Edit3, Eye, Search, Loader2, X, Calendar, AlertCircle, CheckCircle2, Clock, UserCircle, Users, Download } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { exportTodosToPDF, exportTodosToWord } from '../../utils/exportUtils'
 
 interface UserFilterOption {
   id: number
@@ -343,17 +344,38 @@ export default function TachesPage() {
                className="w-full rounded-2xl border-none bg-slate-50 py-3.5 pl-12 pr-4 text-sm outline-none ring-1 ring-slate-200 transition focus:ring-2 focus:ring-blue-100 dark:bg-slate-950 dark:ring-slate-800"
              />
            </div>
-           <select
-             value={selectedUserId ?? ''}
-             onChange={(e) => setSelectedUserId(e.target.value ? Number(e.target.value) : null)}
-             className="rounded-2xl border-none bg-slate-50 px-4 py-3.5 text-sm outline-none ring-1 ring-slate-200 transition focus:ring-2 focus:ring-blue-100 dark:bg-slate-950 dark:ring-slate-800"
-           >
-             <option value="">Tous les utilisateurs</option>
-             {visibleUserFilterOptions.map(user => (
-               <option key={user.id || user.username} value={user.id}>{user.username}</option>
-             ))}
-           </select>
-         </div>
+<select
+              value={selectedUserId ?? ''}
+              onChange={(e) => setSelectedUserId(e.target.value ? Number(e.target.value) : null)}
+              className="rounded-2xl border-none bg-slate-50 px-4 py-3.5 text-sm outline-none ring-1 ring-slate-200 transition focus:ring-2 focus:ring-blue-100 dark:bg-slate-950 dark:ring-slate-800"
+            >
+              <option value="">Tous les utilisateurs</option>
+              {visibleUserFilterOptions.map(user => (
+                <option key={user.id || user.username} value={user.id}>{user.username}</option>
+              ))}
+            </select>
+            
+            <div className="flex gap-2">
+              <button
+                onClick={() => exportTodosToPDF(filteredTodos, selectedUserId ? visibleUserFilterOptions.find(u => u.id === selectedUserId)?.username : undefined)}
+                disabled={filteredTodos.length === 0}
+                className="flex items-center justify-center gap-2 rounded-2xl bg-rose-100 px-4 py-3 text-sm font-bold text-rose-700 transition hover:bg-rose-200 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+                title="Exporter PDF"
+              >
+                <Download className="h-4 w-4" />
+                PDF
+              </button>
+              <button
+                onClick={() => exportTodosToWord(filteredTodos, selectedUserId ? visibleUserFilterOptions.find(u => u.id === selectedUserId)?.username : undefined)}
+                disabled={filteredTodos.length === 0}
+                className="flex items-center justify-center gap-2 rounded-2xl bg-blue-100 px-4 py-3 text-sm font-bold text-blue-700 transition hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+                title="Exporter Word"
+              >
+                <Download className="h-4 w-4" />
+                Word
+              </button>
+            </div>
+          </div>
 
           {viewContent}
        </div>

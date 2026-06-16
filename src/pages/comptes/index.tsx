@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { fetchAccounts, createAccount, updateAccount, deleteAccount, fetchAccountById, Account, AccountCreateData } from '../../api/accountApi'
 import { fetchApplications, Application } from '../../api/applicationApi'
-import { Folder, Trash2, Edit3, Eye, Plus, Loader2, X, Key, Shield } from 'lucide-react'
+import { Folder, Trash2, Edit3, Eye, Plus, Loader2, X, Key, Shield, Search } from 'lucide-react'
 import { useToast } from '../../components/ToastProvider'
 
 export default function ComptesPage() {
@@ -13,7 +13,12 @@ export default function ComptesPage() {
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { showToast } = useToast()
-
+  
+  const [searchTerm, setSearchTerm] = useState('')
+  const [sortField, setSortField] = useState<'username' | 'role'>('username')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [filterApplicationId, setFilterApplicationId] = useState<number | null>(null)
+  
   const [formData, setFormData] = useState<AccountCreateData>({
     applicationId: 0,
     username: '',
@@ -21,7 +26,7 @@ export default function ComptesPage() {
     role: 'USER',
     commentaire: ''
   })
-  
+
   const [showViewModal, setShowViewModal] = useState(false)
   const [viewingAccount, setViewingAccount] = useState<Account | null>(null)
 
@@ -44,6 +49,43 @@ export default function ComptesPage() {
       setIsLoading(false)
     }
   }
+
+  const sortedAccounts = useMemo(() => {
+    return [...accounts].sort((a, b) => {
+      let valueA: string = '';
+      let valueB: string = '';
+      
+      if (sortField === 'username') {
+        valueA = a.username || '';
+        valueB = b.username || '';
+      } else if (sortField === 'role') {
+        valueA = a.role || '';
+        valueB = b.role || '';
+      }
+      
+      return sortDirection === 'asc' 
+        ? valueA.localeCompare(valueB) 
+        : valueB.localeCompare(valueA);
+    });
+  }, [accounts, sortField, sortDirection]);
+
+  const filteredAccounts = useMemo(() => {
+    return sortedAccounts.filter(account => {
+      if (filterApplicationId && account.applicationId !== filterApplicationId) {
+        return false;
+      }
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        return (
+          account.username?.toLowerCase().includes(term) ||
+          account.code?.toLowerCase().includes(term) ||
+          account.commentaire?.toLowerCase().includes(term) ||
+          applications.find(a => a.id === account.applicationId)?.nom?.toLowerCase().includes(term)
+        );
+      }
+      return true;
+    });
+  }, [sortedAccounts, searchTerm, filterApplicationId]);
 
   const handleDelete = async (id: number) => {
     if (!window.confirm("Supprimer ce compte ?")) return
@@ -121,6 +163,53 @@ export default function ComptesPage() {
             <Plus className="h-5 w-5" />
             Nouveau compte
           </button>
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="rounded-[2rem] bg-white p-4 shadow-soft dark:bg-slate-900"
+      >
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Rechercher par utilisateur, code ou commentaire..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full rounded-xl border-none bg-slate-50 py-2.5 pl-10 pr-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-400 dark:bg-slate-950"
+            />
+          </div>
+          <div className="flex gap-2">
+            <select
+              value={filterApplicationId ?? ''}
+              onChange={(e) => setFilterApplicationId(e.target.value ? Number(e.target.value) : null)}
+              className="rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-400 dark:bg-slate-950"
+            >
+              <option value="">Toutes les applications</option>
+              {applications.map((app) => (
+                <option key={app.id} value={app.id}>{app.nom}</option>
+              ))}
+            </select>
+            <select
+              value={sortField}
+              onChange={(e) => setSortField(e.target.value as any)}
+              className="rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-400 dark:bg-slate-950"
+            >
+              <option value="username">Trier par utilisateur</option>
+              <option value="role">Trier par rôle</option>
+            </select>
+            <button
+              onClick={() => setSortDirection(dir => dir === 'asc' ? 'desc' : 'asc')}
+              className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold uppercase text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+              title={sortDirection === 'asc' ? 'Tri croissant' : 'Tri décroissant'}
+            >
+              {sortDirection === 'asc' ? '↑' : '↓'}
+            </button>
+          </div>
         </div>
       </motion.div>
 
@@ -231,7 +320,7 @@ export default function ComptesPage() {
                 </tr>
               </thead>
               <tbody>
-                {accounts.map(account => (
+                {filteredAccounts.map(account => (
                   <motion.tr 
                     layout 
                     key={account.id} 
@@ -292,11 +381,16 @@ export default function ComptesPage() {
                 ))}
               </tbody>
             </table>
+            {filteredAccounts.length === 0 && accounts.length > 0 && (
+              <div className="py-20 text-center text-slate-500">
+                <p className="text-sm">Aucun compte ne correspond à vos filtres.</p>
+              </div>
+            )}
           </div>
 
           {/* Mobile Card View */}
           <div className="sm:hidden grid gap-4">
-            {accounts.map((account) => (
+            {filteredAccounts.map((account) => (
               <motion.div
                 layout
                 key={account.id}
@@ -332,6 +426,11 @@ export default function ComptesPage() {
                 </div>
               </motion.div>
             ))}
+            {filteredAccounts.length === 0 && accounts.length > 0 && (
+              <div className="py-20 text-center text-slate-500">
+                <p className="text-sm">Aucun compte ne correspond à vos filtres.</p>
+              </div>
+            )}
           </div>
         </>
       )}

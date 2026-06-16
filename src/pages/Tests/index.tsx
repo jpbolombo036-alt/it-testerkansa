@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { fetchTestSessions, createTestSession, deleteTestSession, updateTestSession, exportTestSession, TestSession, TestSessionCreateData } from '../../api/testSessionApi'
 import { fetchTestSteps, updateTest, reportBug, createTest, deleteTest, TestStep, Bug } from '../../api/testApi'
-import { CheckCircle, XCircle, Bug as BugIcon, Loader2, ClipboardCheck, Plus, Calendar, X, Eye, FileText, Edit3, Download, Trash2 } from 'lucide-react'
+import { fetchUsers, User } from '../../api/userApi'
+import { CheckCircle, XCircle, Bug as BugIcon, Loader2, ClipboardCheck, Plus, Calendar, X, Eye, FileText, Edit3, Download, Trash2, Search, User as UserIcon } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ToastProvider' // Import useToast
 
@@ -21,9 +22,15 @@ export default function TestsPage() {
    
    const [showViewModal, setShowViewModal] = useState(false)
    const [showEditModal, setShowEditModal] = useState(false)
-   const [editingTest, setEditingTest] = useState<TestStep | null>(null)
-   
-   const handleViewTest = (test: TestStep) => {
+const [editingTest, setEditingTest] = useState<TestStep | null>(null)
+    
+    const [searchTerm, setSearchTerm] = useState('')
+    const [sortField, setSortField] = useState<'nom' | 'dateCreation' | 'createdByUsername'>('nom')
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+    const [filterCreatorId, setFilterCreatorId] = useState<number | null>(null)
+    const [users, setUsers] = useState<User[]>([])
+    
+    const handleViewTest = (test: TestStep) => {
      setEditingTest(test)
      setShowViewModal(true)
    }
@@ -131,23 +138,72 @@ const [editingSession, setEditingSession] = useState<TestSession | null>(null)
       nom_document: ''
     })
    
-   useEffect(() => {
-     loadSessions()
-   }, [])
-   
-   const loadSessions = async () => {
-     try {
-       setIsLoading(true)
-       const data = await fetchTestSessions()
-       setSessions(data)
-     } catch (err) {
-       console.error("Erreur chargement sessions", err)
-     } finally {
-       setIsLoading(false)
-     }
-   }
-   
-const handleCreateSession = async (e: React.FormEvent) => {
+useEffect(() => {
+      loadSessions()
+      loadUsersList()
+    }, [])
+    
+    const loadUsersList = async () => {
+      try {
+        const data = await fetchUsers()
+        setUsers(data)
+      } catch (err) {
+        console.error("Erreur chargement utilisateurs", err)
+      }
+    }
+    
+    const loadSessions = async () => {
+      try {
+        setIsLoading(true)
+        const data = await fetchTestSessions()
+        setSessions(data)
+      } catch (err) {
+        console.error("Erreur chargement sessions", err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    const sortedSessions = useMemo(() => {
+      return [...sessions].sort((a, b) => {
+        let valueA: string = '';
+        let valueB: string = '';
+        
+        if (sortField === 'nom') {
+          valueA = a.nom || '';
+          valueB = b.nom || '';
+        } else if (sortField === 'dateCreation') {
+          valueA = a.dateCreation || '';
+          valueB = b.dateCreation || '';
+        } else if (sortField === 'createdByUsername') {
+          valueA = a.createdByUsername || '';
+          valueB = b.createdByUsername || '';
+        }
+        
+        return sortDirection === 'asc' 
+          ? valueA.localeCompare(valueB) 
+          : valueB.localeCompare(valueA);
+      });
+    }, [sessions, sortField, sortDirection]);
+
+    const filteredSessions = useMemo(() => {
+      return sortedSessions.filter(session => {
+        if (searchTerm) {
+          const term = searchTerm.toLowerCase();
+          return (
+            session.nom?.toLowerCase().includes(term) ||
+            session.description?.toLowerCase().includes(term) ||
+            session.createdByUsername?.toLowerCase().includes(term)
+          );
+        }
+        if (filterCreatorId !== null) {
+          return session.createdBy === filterCreatorId;
+        }
+        return true;
+      });
+    }, [sortedSessions, searchTerm, filterCreatorId]);
+
+    const handleCreateSession = async (e: React.FormEvent) => {
       e.preventDefault()
       try {
         setIsSubmitting(true)
@@ -338,11 +394,59 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
              </form>
            </motion.div>
          )}
-       </AnimatePresence>
+</AnimatePresence>
 
-       {selectedSessionId === null ? (
-         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-{sessions.map((session) => (
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="rounded-[2rem] bg-white p-4 shadow-soft dark:bg-slate-900"
+      >
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Rechercher par nom, description ou créateur..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full rounded-xl border-none bg-slate-50 py-2.5 pl-10 pr-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
+            />
+          </div>
+          <div className="flex gap-2">
+            <select
+              value={sortField}
+              onChange={(e) => setSortField(e.target.value as any)}
+              className="rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
+            >
+              <option value="nom">Trier par nom</option>
+              <option value="dateCreation">Trier par date</option>
+              <option value="createdByUsername">Trier par créateur</option>
+            </select>
+            <select
+              value={filterCreatorId ?? ''}
+              onChange={(e) => setFilterCreatorId(e.target.value ? Number(e.target.value) : null)}
+              className="rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
+            >
+              <option value="">Tous les créateurs</option>
+              {users.map((u) => (
+                <option key={u.id} value={u.id}>{u.username}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => setSortDirection(dir => dir === 'asc' ? 'desc' : 'asc')}
+              className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold uppercase text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+              title={sortDirection === 'asc' ? 'Tri croissant' : 'Tri décroissant'}
+            >
+              {sortDirection === 'asc' ? '↑' : '↓'}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+
+      {selectedSessionId === null ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+{filteredSessions.map((session) => (
               <div key={session.id} className="rounded-[2rem] bg-white p-6 shadow-soft dark:bg-slate-900 flex flex-col h-full">
                 <div className="flex-1">
                   <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{session.nom}</h3>
@@ -397,10 +501,15 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
                     <Trash2 className="h-3 w-3" />
                   </button>
                 </div>
-             </div>
-           ))}
-         </div>
-       ) : (
+</div>
+            ))}
+            {filteredSessions.length === 0 && sessions.length > 0 && (
+              <div className="col-span-3 py-20 text-center text-slate-500">
+                <p className="text-sm">Aucune session ne correspond à vos filtres.</p>
+              </div>
+            )}
+          </div>
+        ) : (
          <div className="space-y-6">
 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
