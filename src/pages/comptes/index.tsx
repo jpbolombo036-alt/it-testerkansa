@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { fetchAccounts, createAccount, updateAccount, deleteAccount, fetchAccountById, Account, AccountCreateData } from '../../api/accountApi'
 import { fetchApplications, Application } from '../../api/applicationApi'
@@ -6,6 +7,7 @@ import { Folder, Trash2, Edit3, Eye, Plus, Loader2, X, Key, Shield, Search } fro
 import { useToast } from '../../components/ToastProvider'
 
 export default function ComptesPage() {
+  const navigate = useNavigate()
   const [accounts, setAccounts] = useState<Account[]>([])
   const [applications, setApplications] = useState<Application[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -26,9 +28,6 @@ export default function ComptesPage() {
     role: 'USER',
     commentaire: ''
   })
-
-  const [showViewModal, setShowViewModal] = useState(false)
-  const [viewingAccount, setViewingAccount] = useState<Account | null>(null)
 
   useEffect(() => {
     loadData()
@@ -99,20 +98,11 @@ export default function ComptesPage() {
   }
 
   const handleEdit = (account: Account) => {
-    setEditingAccount(account)
-    setFormData({
-      applicationId: account.applicationId,
-      username: account.username,
-      code: account.code,
-      role: account.role,
-      commentaire: account.commentaire
-    })
-    setShowForm(true)
+    navigate(`/comptes/${account.id}/edit`)
   }
 
   const handleView = (account: Account) => {
-    setViewingAccount(account)
-    setShowViewModal(true)
+    navigate(`/comptes/${account.id}`)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -157,7 +147,7 @@ export default function ComptesPage() {
           </div>
           
           <button
-            onClick={() => setShowForm(!showForm)}
+            onClick={() => navigate('/comptes/new')}
             className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-emerald-700 w-full sm:w-auto"
           >
             <Plus className="h-5 w-5" />
@@ -434,33 +424,6 @@ export default function ComptesPage() {
           </div>
         </>
       )}
-
-      <AnimatePresence>
-        {showViewModal && viewingAccount && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-md rounded-[2.5rem] bg-white p-6 shadow-2xl dark:bg-slate-900"
-            >
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Détails du compte</h3>
-                <button onClick={() => setShowViewModal(false)} className="text-slate-400 hover:text-slate-600">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              <div className="space-y-3 text-sm">
-                <div><span className="font-semibold">Utilisateur:</span> {viewingAccount.username}</div>
-                <div><span className="font-semibold">Application:</span> {applications.find(a => a.id === viewingAccount.applicationId)?.nom || '-'}</div>
-                <div><span className="font-semibold">Code:</span> {viewingAccount.code}</div>
-                <div><span className="font-semibold">Rôle:</span> {viewingAccount.role}</div>
-                <div><span className="font-semibold">Commentaire:</span> {viewingAccount.commentaire || '-'}</div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   )
 }

@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { fetchTestSessions, createTestSession, deleteTestSession, updateTestSession, exportTestSession, TestSession, TestSessionCreateData } from '../../api/testSessionApi'
+import { fetchTestSessions, createTestSession, deleteTestSession, updateTestSession, exportTestSession, SESSION_STATUS_OPEN, SESSION_STATUS_CLOSED, requestCloseSession, TestSession, TestSessionCreateData } from '../../api/testSessionApi'
 import { fetchTestSteps, updateTest, reportBug, createTest, deleteTest, TestStep, Bug } from '../../api/testApi'
 import { fetchUsers, User } from '../../api/userApi'
-import { CheckCircle, XCircle, Bug as BugIcon, Loader2, ClipboardCheck, Plus, Calendar, X, Eye, FileText, Edit3, Download, Trash2, Search, User as UserIcon } from 'lucide-react'
+import { CheckCircle, XCircle, Bug as BugIcon, Loader2, ClipboardCheck, Plus, Calendar, X, Lock, Unlock, Eye, FileText, Edit3, Download, Trash2, Search, User as UserIcon } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ToastProvider' // Import useToast
 
 export default function TestsPage() {
+   const navigate = useNavigate()
    const { user } = useAuth()
    const { showToast } = useToast() // Initialize useToast
    const [sessions, setSessions] = useState<TestSession[]>([])
@@ -17,8 +19,11 @@ export default function TestsPage() {
    const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null)
    const [selectedSessionTests, setSelectedSessionTests] = useState<TestStep[]>([])
    const [isSubmitting, setIsSubmitting] = useState(false)
-   const [reportingBugFor, setReportingBugFor] = useState<number | null>(null)
-   const [bugDescription, setBugDescription] = useState('')
+    const [reportingBugFor, setReportingBugFor] = useState<number | null>(null)
+    const [bugDescription, setBugDescription] = useState('')
+    const [closingSessionId, setClosingSessionId] = useState<number | null>(null)
+
+    const getSessionStatus = (session: TestSession) => (session.statut && session.statut.toUpperCase() === SESSION_STATUS_CLOSED) ? SESSION_STATUS_CLOSED : SESSION_STATUS_OPEN
    
    const [showViewModal, setShowViewModal] = useState(false)
    const [showEditModal, setShowEditModal] = useState(false)
@@ -61,7 +66,33 @@ const handleDeleteTest = async (testId: number) => {
         showToast('error', 'Erreur', 'Impossible de supprimer la session.')
       }
     }
-    
+
+    const handleRequestCloseSession = async (sessionId: number) => {
+      try {
+        setClosingSessionId(sessionId)
+        const updatedSession = await requestCloseSession(sessionId)
+        setSessions(currentSessions => currentSessions.map(session => session.id === sessionId ? updatedSession : session))
+        showToast('success', 'Session close request sent. Admins notified.')
+      } catch {
+        showToast('error', 'Erreur', 'Impossible de demander la fermeture de la session.')
+      } finally {
+        setClosingSessionId(null)
+      }
+    }
+
+    const handleReopenSession = async (sessionId: number) => {
+      const session = sessions.find(s => s.id === sessionId)
+      if (!session) return
+
+      try {
+        const updatedSession = await updateTestSession(sessionId, { ...session, statut: SESSION_STATUS_OPEN })
+        setSessions(currentSessions => currentSessions.map(s => s.id === sessionId ? updatedSession : s))
+        showToast('success', 'Session rouverte', 'La session a été rouverte avec succès.')
+      } catch {
+        showToast('error', 'Erreur', 'Impossible de rouvrir la session.')
+      }
+    }
+
     const handleExportPDF = async (sessionId: number) => {
       try {
         const session = await exportTestSession(sessionId)
@@ -279,15 +310,19 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
      }
    }
    
-   if (isLoading) {
-     return (
-       <div className="flex h-96 items-center justify-center">
-         <Loader2 className="h-10 w-10 animate-spin text-sky-600" />
-       </div>
-     )
-   }
-   
-   return (
+    if (isLoading) {
+      return (
+        <div className="flex h-96 items-center justify-center">
+          <Loader2 className="h-10 w-10 animate-spin text-sky-600" />
+        </div>
+      )
+    }
+
+    const currentSession = selectedSessionId === null ? null : sessions.find(session => session.id === selectedSessionId)
+    const currentSessionStatus = currentSession ? getSessionStatus(currentSession) : SESSION_STATUS_OPEN
+    const isAdmin = user?.role === 'ADMIN'
+
+    return (
 <div className="space-y-8 p-6">
         {selectedSessionId === null && (
         <motion.div
@@ -308,7 +343,7 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
             </div>
             
             <button
-              onClick={() => setShowSessionForm(!showSessionForm)}
+              onClick={() => navigate('/tests/new')}
               className="flex items-center justify-center gap-2 rounded-2xl bg-sky-600 px-4 py-2.5 sm:px-6 sm:py-3 text-sm font-bold text-white transition hover:bg-sky-700 w-full sm:w-auto"
             >
               <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -451,6 +486,16 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
                 <div className="flex-1">
                   <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{session.nom}</h3>
                   <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{session.description}</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider ${
+                      getSessionStatus(session) === SESSION_STATUS_CLOSED ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
+                    }`}>
+                      <span className={`mr-1.5 h-1.5 w-1.5 rounded-full ${
+                        getSessionStatus(session) === SESSION_STATUS_CLOSED ? 'bg-red-500' : 'bg-emerald-500'
+                      }`} />
+                      {getSessionStatus(session)}
+                    </span>
+                  </div>
                   {session.createdByUsername && (
                     <p className="text-xs text-sky-600 dark:text-sky-400 mt-1 font-medium">
                       Créé par : {session.createdByUsername}
@@ -472,6 +517,25 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
                   >
                     <Eye className="h-4 w-4" />
                   </button>
+                  {!isAdmin && getSessionStatus(session) === SESSION_STATUS_OPEN && (
+                    <button
+                      onClick={() => handleRequestCloseSession(session.id)}
+                      disabled={closingSessionId === session.id}
+                      className="flex items-center justify-center rounded-2xl bg-red-100 p-2.5 text-red-700 hover:bg-red-200 disabled:opacity-50 dark:bg-red-900/30 dark:text-red-300"
+                      title="Demander la fermeture de la session"
+                    >
+                      {closingSessionId === session.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+                    </button>
+                  )}
+                  {isAdmin && getSessionStatus(session) === SESSION_STATUS_CLOSED && (
+                    <button
+                      onClick={() => handleReopenSession(session.id)}
+                      className="flex items-center justify-center rounded-2xl bg-emerald-100 p-2.5 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300"
+                      title="Rouvrir la session"
+                    >
+                      <Unlock className="h-4 w-4" />
+                    </button>
+                  )}
                   <button
                     onClick={() => handleExportPDF(session.id)}
                     className="flex items-center justify-center rounded-2xl bg-rose-100 p-2 text-rose-700 hover:bg-rose-200 dark:bg-rose-900/30 dark:text-rose-300"
@@ -516,6 +580,11 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
                 <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
                   Tests de la session #{selectedSessionId}
                 </h2>
+                {currentSessionStatus === SESSION_STATUS_CLOSED && (
+                  <div className="mt-2 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 ring-1 ring-red-100 dark:bg-red-950/30 dark:text-red-300 dark:ring-red-900/50">
+                    Cette session est fermée. Seul un administrateur peut la rouvrir.
+                  </div>
+                )}
                 {sessions.find(s => s.id === selectedSessionId)?.createdByUsername && (
                   <p className="text-xs sm:text-sm text-sky-600 dark:text-sky-400 mt-1">
                     Créé par : {sessions.find(s => s.id === selectedSessionId)?.createdByUsername}
@@ -524,8 +593,9 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
               </div>
               <div className="flex flex-col sm:flex-row gap-2">
                 <button
-                  onClick={() => setShowTestForm(!showTestForm)}
-                  className="flex items-center justify-center gap-2 rounded-2xl bg-sky-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-sky-700 w-full sm:w-auto"
+                  onClick={() => navigate(`/tests/test/new?session=${selectedSessionId || ''}`)}
+                  disabled={currentSessionStatus === SESSION_STATUS_CLOSED && !isAdmin}
+                  className="flex items-center justify-center gap-2 rounded-2xl bg-sky-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-sky-700 disabled:opacity-50 w-full sm:w-auto"
                 >
                   <Plus className="h-4 w-4" />
                   Nouveau test
@@ -538,102 +608,8 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
                 </button>
               </div>
             </div>
-           
-           <AnimatePresence>
-             {showTestForm && (
-               <motion.div
-                 initial={{ height: 0, opacity: 0 }}
-                 animate={{ height: 'auto', opacity: 1 }}
-                 exit={{ height: 0, opacity: 0 }}
-                 className="rounded-[2.5rem] bg-white p-6 shadow-soft dark:bg-slate-900"
-               >
-                 <div className="mb-4 flex items-center justify-between">
-                   <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">Nouveau test</h3>
-                   <button onClick={() => setShowTestForm(false)} className="text-slate-400 hover:text-slate-600">
-                     <X className="h-5 w-5" />
-                   </button>
-                 </div>
-                 <form onSubmit={handleCreateTestInSession} className="space-y-4">
-                   <div className="grid grid-cols-2 gap-4">
-                     <div className="space-y-1.5">
-                       <label className="text-xs font-bold uppercase text-slate-500">Fonction *</label>
-                       <input 
-                         type="text" 
-                         required
-                         value={testFormData.fonction}
-                         onChange={(e) => setTestFormData({...testFormData, fonction: e.target.value})}
-                         className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
-                       />
-                     </div>
-                     <div className="space-y-1.5">
-                       <label className="text-xs font-bold uppercase text-slate-500">Précondition</label>
-                       <input 
-                         type="text" 
-                         value={testFormData.precondition}
-                         onChange={(e) => setTestFormData({...testFormData, precondition: e.target.value})}
-                         className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
-                       />
-                     </div>
-                   </div>
-                   <div className="space-y-1.5">
-                     <label className="text-xs font-bold uppercase text-slate-500">Étapes</label>
-                     <textarea 
-                       value={testFormData.etapes}
-                       onChange={(e) => setTestFormData({...testFormData, etapes: e.target.value})}
-                       className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
-                       rows={3}
-                     />
-                   </div>
-<div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold uppercase text-slate-500">Résultat attendu</label>
-                        <input 
-                          type="text" 
-                          value={testFormData.resultatAttendu}
-                          onChange={(e) => setTestFormData({...testFormData, resultatAttendu: e.target.value})}
-                          className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold uppercase text-slate-500">Résultat obtenu</label>
-                        <input 
-                          type="text" 
-                          value={testFormData.resultatObtenu}
-                          onChange={(e) => setTestFormData({...testFormData, resultatObtenu: e.target.value})}
-                          className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold uppercase text-slate-500">Statut</label>
-<select 
-                           value={testFormData.statut}
-                           onChange={(e) => setTestFormData({...testFormData, statut: e.target.value})}
-                           className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
-                         >
-                           <option value="EN COURS">En cours</option>
-                           <option value="OK">OK</option>
-                           <option value="BUG">Bug</option>
-                         </select>
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold uppercase text-slate-500">Commentaires</label>
-                      <textarea 
-                        value={testFormData.commentaires}
-                        onChange={(e) => setTestFormData({...testFormData, commentaires: e.target.value})}
-                        className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
-                        rows={2}
-                      />
-                    </div>
-                    <button type="submit" className="rounded-2xl bg-sky-600 px-6 py-2 font-bold text-white shadow-lg transition hover:bg-sky-700">
-                     Créer le test
-                   </button>
-                 </form>
-               </motion.div>
-             )}
-           </AnimatePresence>
-           
-<div className="hidden sm:block overflow-x-auto">
+            
+            <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-left border-separate border-spacing-y-4">
                 <thead>
                   <tr className="text-xs font-extrabold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">

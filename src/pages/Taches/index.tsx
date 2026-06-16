@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { fetchTodos, fetchTodosGroupedByUser, createTodo, updateTodo, deleteTodo, toggleTodo, Todo, TodoCreateData, UserWithTodos } from '../../api/todoApi'
 import { FileText, Plus, Trash2, Edit3, Eye, Search, Loader2, X, Calendar, AlertCircle, CheckCircle2, Clock, UserCircle, Users, Download } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -10,6 +11,7 @@ interface UserFilterOption {
 }
 
 export default function TachesPage() {
+   const navigate = useNavigate()
    const [todos, setTodos] = useState<Todo[]>([])
    const [groupedTodos, setGroupedTodos] = useState<UserWithTodos[]>([])
    const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
@@ -298,7 +300,7 @@ export default function TachesPage() {
                <td className="rounded-r-3xl bg-slate-50/50 p-4 text-right dark:bg-slate-800/40">
                  <div className="flex justify-end gap-1">
                    <button onClick={() => handleOpenModal('view', todo)} className="p-2 text-slate-400 hover:text-sky-600"><Eye className="h-4 w-4" /></button>
-                   <button onClick={() => handleOpenModal('edit', todo)} className="p-2 text-slate-400 hover:text-amber-600"><Edit3 className="h-4 w-4" /></button>
+                    <button onClick={() => navigate(`/taches/${todo.id}/edit`)} className="p-2 text-slate-400 hover:text-amber-600"><Edit3 className="h-4 w-4" /></button>
                    <button onClick={() => handleDelete(todo.id)} className="p-2 text-slate-400 hover:text-rose-600"><Trash2 className="h-4 w-4" /></button>
                  </div>
                </td>
@@ -326,7 +328,7 @@ export default function TachesPage() {
             <button onClick={() => setShowGroupedView(!showGroupedView)} className="flex items-center justify-center gap-2 rounded-2xl bg-slate-100 px-6 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 w-full sm:w-auto">
               <Users className="h-5 w-5" /> {showGroupedView ? 'Vue liste' : 'Par utilisateur'}
             </button>
-            <button onClick={() => handleOpenModal('create')} className="flex items-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-700 w-full sm:w-auto">
+            <button onClick={() => navigate('/taches/new')} className="flex items-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-700 w-full sm:w-auto">
               <Plus className="h-5 w-5" /> Nouvelle tâche
             </button>
           </div>

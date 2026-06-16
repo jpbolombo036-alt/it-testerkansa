@@ -12,6 +12,9 @@ export interface Test {
   commentaires?: string
 }
 
+export const SESSION_STATUS_OPEN = 'OPEN'
+export const SESSION_STATUS_CLOSED = 'CLOSED'
+
 export interface TestSession {
    id: number
    nom: string
@@ -70,9 +73,17 @@ export async function fetchTestSessionById(id: number) {
 }
 
 /**
- * GET /test-sessions/{id}/export : Récupère les données de la session pour l'export
+ * GET /test-sessions/{id}/export : Récupère les données de la session pour export
  */
 export async function exportTestSession(id: number) {
   const response = await api.get<TestSession>(`/test-sessions/${id}/export`)
+  return response.data
+}
+
+/**
+ * POST /test-sessions/{id}/request-close : Demande la clôture d'une session (notification aux admins)
+ */
+export async function requestCloseSession(id: number) {
+  const response = await api.post<TestSession>(`/test-sessions/${id}/request-close`)
   return response.data
 }

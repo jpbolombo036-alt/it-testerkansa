@@ -1,15 +1,15 @@
 export interface BlocNoteDTO {
   id: number;
-  title: string;
+  title?: string;
   content: string;
-  applicationId: number | null;
-  sessionId: number | null;
-  testId: number | null;
-  status: string;
-  createdBy: number;
-  createdByUsername: string;
-  createdAt: string;
-  updatedAt: string;
+  applicationId?: number;
+  sessionId?: number;
+  testId?: number;
+  status?: string;
+  createdBy?: number;
+  createdByUsername?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface BlocNoteRequest {
@@ -21,6 +21,10 @@ export interface BlocNoteRequest {
   status?: string;
 }
 
-export const STATUS_DRAFT = 'DRAFT';
-export const STATUS_PUBLISHED = 'PUBLISHED';
-export const STATUS_ARCHIVED = 'ARCHIVED';
+export const BLOC_NOTE_STATUSES = [
+  { value: 'DRAFT', label: 'Brouillon' },
+  { value: 'IN_PROGRESS', label: 'En cours' },
+  { value: 'VALIDATED', label: 'Validé' },
+  { value: 'REJECTED', label: 'Rejeté' },
+  { value: 'ARCHIVED', label: 'Archivé' }
+];

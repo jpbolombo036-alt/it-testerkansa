@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link as LinkIcon, Plus, Calendar, X, Edit3, Trash2, ExternalLink, Globe, Search } from 'lucide-react';
 import { useToast } from '../../components/ToastProvider';
@@ -17,6 +18,7 @@ const LINK_TYPES = [
 ];
 
 export default function ApplicationLinksPage() {
+  const navigate = useNavigate()
   const [links, setLinks] = useState<ApplicationLink[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -98,17 +100,9 @@ export default function ApplicationLinksPage() {
     }
   };
 
-  const handleEditLink = async (link: ApplicationLink) => {
-    if (link.id) {
-      try {
-        const fullLink = await fetchApplicationLinkById(link.id);
-        setEditingLink(fullLink);
-        setShowEditLinkModal(true);
-      } catch (err) {
-        showToast('error', 'Erreur', 'Impossible de charger le lien.');
-      }
-    }
-  };
+  const handleEditLink = (link: ApplicationLink) => {
+    navigate(`/application-links/${link.id}/edit`)
+  }
 
   const handleUpdateLink = async (e: React.FormEvent) => {
     if (!editingLink?.id) return;
@@ -275,7 +269,7 @@ export default function ApplicationLinksPage() {
           </div>
           
           <button
-            onClick={() => setShowLinkForm(!showLinkForm)}
+            onClick={() => navigate('/application-links/new')}
             className="flex items-center justify-center gap-2 rounded-2xl bg-sky-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-sky-700 w-full sm:w-auto"
           >
             <Plus className="h-5 w-5" />
@@ -559,83 +553,6 @@ export default function ApplicationLinksPage() {
         )}
       </div>
 
-      <AnimatePresence>
-        {showEditLinkModal && editingLink && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-lg rounded-[2.5rem] bg-white p-6 shadow-2xl dark:bg-slate-900"
-            >
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Modifier le lien</h3>
-                <button onClick={() => setShowEditLinkModal(false)} className="text-slate-400 hover:text-slate-600">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              <form onSubmit={handleUpdateLink} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase text-slate-500">Application</label>
-                    <select
-                      value={editingLink.applicationId}
-                      onChange={(e) => setEditingLink({...editingLink, applicationId: Number(e.target.value)})}
-                      className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
-                    >
-                      {applications.map((app) => (
-                        <option key={app.id} value={app.id}>{app.nom}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase text-slate-500">Type</label>
-                    <select
-                      value={editingLink.type || 'production'}
-                      onChange={(e) => setEditingLink({...editingLink, type: e.target.value})}
-                      className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
-                    >
-                      {LINK_TYPES.map((type) => (
-                        <option key={type} value={type}>{type}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase text-slate-500">Nom</label>
-                  <input
-                    type="text"
-                    value={editingLink.nom || ''}
-                    onChange={(e) => setEditingLink({...editingLink, nom: e.target.value})}
-                    className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase text-slate-500">URL</label>
-                  <input
-                    type="url"
-                    value={editingLink.url || ''}
-                    onChange={(e) => setEditingLink({...editingLink, url: e.target.value})}
-                    className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase text-slate-500">Description</label>
-                  <textarea
-                    value={editingLink.description || ''}
-                    onChange={(e) => setEditingLink({...editingLink, description: e.target.value})}
-                    className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
-                    rows={2}
-                  />
-                </div>
-                <button type="submit" className="rounded-2xl bg-sky-600 px-6 py-2 font-bold text-white shadow-lg transition hover:bg-sky-700">
-                  Enregistrer
-                </button>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
+      </div>
+    )
+  }

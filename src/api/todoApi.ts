@@ -23,6 +23,14 @@ export interface UserWithTodos {
 export type TodoCreateData = Omit<Todo, 'id'>
 
 /**
+ * GET /todos/{id} : Récupère une tâche par ID
+ */
+export async function fetchTodoById(id: number) {
+  const response = await api.get<Todo>(`/todos/${id}`)
+  return response.data
+}
+
+/**
  * GET /todos : Liste toutes les tâches
  */
 export async function fetchTodos() {

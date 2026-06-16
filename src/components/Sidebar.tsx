@@ -19,7 +19,7 @@ export const menuItems = [
   { label: 'Applications', to: '/applications', icon: Layers },
   { label: 'Liens Web', to: '/application-links', icon: Link },
   { label: 'Comptes', to: '/comptes', icon: CreditCard },
-  { label: 'Bloc Note', to: '/bloc-note', icon: StickyNote },
+  { label: 'Notes QA', to: '/bloc-notes', icon: StickyNote },
   { label: 'Tests', to: '/tests', icon: CheckSquare },
   { label: 'Tâches', to: '/taches', icon: FileText },
   { label: 'Messages', to: '/messages', icon: MessageCircle },

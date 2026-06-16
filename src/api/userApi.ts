@@ -73,6 +73,14 @@ export async function createUser(userData: { username: string; email: string; pa
 }
 
 /**
+ * PUT /users/{id} : Met à jour un utilisateur (Admin)
+ */
+export async function updateUser(id: number, data: Partial<User>) {
+  const response = await api.put<User>(`/users/${id}`, data)
+  return response.data
+}
+
+/**
  * GET /users/available : Liste les utilisateurs disponibles pour la messagerie
  */
 export async function fetchAvailableUsers() {
