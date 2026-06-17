@@ -44,3 +44,17 @@ export async function fetchUnreadCount() {
   const response = await api.get<{ count: number }>('/messages/unread-count')
   return response.data
 }
+
+export interface UnreadConversation {
+  userId: number
+  count: number
+}
+
+export async function fetchUnreadConversations() {
+  const response = await api.get<UnreadConversation[]>('/messages/unread-conversations')
+  return response.data
+}
+
+export async function markConversationAsRead(userId: number) {
+  await api.patch(`/messages/conversation/${userId}/read`)
+}

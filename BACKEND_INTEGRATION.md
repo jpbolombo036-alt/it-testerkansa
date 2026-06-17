@@ -339,6 +339,43 @@
 | PATCH | `/system-notifications/{id}/read` | `markNotificationAsRead(id)` |
 | PATCH | `/system-notifications/read-all` | `markAllNotificationsAsRead()` |
 
+---
+
+### 9. Messages
+
+**Frontend file:** `src/api/messageApi.ts`
+
+| Method | Path | Frontend Function | Description |
+|--------|------|-------------------|-------------|
+| GET | `/messages` | `fetchMessages()` | List all messages (both sent and received) |
+| GET | `/messages/conversation/{userId}` | `fetchConversation(userId)` | Get conversation with specific user |
+| POST | `/messages` | `sendMessage(toUserId, content)` | Send a text message |
+| POST | `/messages` (multipart) | `sendAttachment(toUserId, content, file)` | Send message with file attachment |
+| GET | `/messages/unread-count` | `fetchUnreadCount()` | Get total unread count |
+| GET | `/messages/unread-conversations` | `fetchUnreadConversations()` | Get unread count per conversation |
+| PATCH | `/messages/conversation/{userId}/read` | `markConversationAsRead(userId)` | Mark all messages from user as read |
+
+**DTOs:**
+```json
+// Message (response)
+{
+  "id": number,
+  "senderId": number,
+  "senderUsername": string | null,
+  "receiverId": number,
+  "receiverUsername": string | null,
+  "content": string,
+  "read": boolean,
+  "timestamp": string (ISO)
+}
+
+// UnreadConversation (response)
+{
+  "userId": number,
+  "count": number
+}
+```
+
 **DTOs:**
 ```json
 // SystemNotification (response)
@@ -379,6 +416,28 @@
    - Type: INFO
    - targetUserId: null (global for all admins)
 
+### 2. UNREAD CONVERSATIONS — GET `/api/messages/unread-conversations`
+**Frontend function:** `fetchUnreadConversations()`  
+**Used when:** Loading the messages page to show unread indicators
+
+**Response:** `UnreadConversation[]` array with `userId` and `count` per conversation
+
+**Backend logic:**
+- Query messages where `receiverId = currentUserId` and `read = false`
+- Group by `senderId` and count
+- Return array of `{ userId: senderId, count: messageCount }`
+
+### 3. MARK CONVERSATION AS READ — PATCH `/api/messages/conversation/{userId}/read`
+**Frontend function:** `markConversationAsRead(userId)`  
+**Used when:** Opening a conversation
+
+**Request:** Empty body `{}`  
+**Response:** Empty or 200 OK
+
+**Backend logic:**
+- Update all messages where `receiverId = currentUserId` and `senderId = userId`
+- Set `read = true`
+
 ---
 
 ## Authentication
@@ -413,6 +472,7 @@
 | Test Sessions | 🟡 Partial | Missing `request-close` endpoint |
 | Tests | 🟢 Ready | All CRUD + bugs endpoints exist |
 | Notifications | 🟢 Ready | All endpoints exist |
+| Messages | 🟡 Partial | Missing `unread-conversations` and `conversation/{userId}/read` endpoints |
 
 ---
 
@@ -423,6 +483,8 @@
   - Locked to authenticated users
   - Calls `SystemNotificationService.createNotification` or `createGlobalNotification` for all admins
 - [ ] Backend `SystemNotificationService` supports `targetUserId: null` for global notifications
+- [ ] Backend `MessageService` has `GET /unread-conversations` endpoint
+- [ ] Backend `MessageService` has `PATCH /conversation/{userId}/read` endpoint
 - [ ] CORS configured for frontend origin
 - [ ] JWT secret key configured
 - [ ] Database migrations run (new `statut` column on `test_sessions` table)

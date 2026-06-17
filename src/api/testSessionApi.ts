@@ -84,6 +84,11 @@ export async function exportTestSession(id: number) {
  * POST /test-sessions/{id}/request-close : Demande la clôture d'une session (notification aux admins)
  */
 export async function requestCloseSession(id: number) {
-  const response = await api.post<TestSession>(`/test-sessions/${id}/request-close`)
-  return response.data
+   const response = await api.post<TestSession>(`/test-sessions/${id}/request-close`)
+   return response.data
+}
+
+export async function closeSession(id: number) {
+   const response = await api.post<TestSession>(`/test-sessions/${id}/close`)
+   return response.data
 }

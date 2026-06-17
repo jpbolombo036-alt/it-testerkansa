@@ -537,6 +537,16 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
                       {closingSessionId === session.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
                     </button>
                   )}
+                  {isAdmin && getSessionStatus(session) === SESSION_STATUS_OPEN && (
+                    <button
+                      onClick={() => handleRequestCloseSession(session.id)}
+                      disabled={closingSessionId === session.id}
+                      className="flex items-center justify-center rounded-2xl bg-red-100 p-2.5 text-red-700 hover:bg-red-200 disabled:opacity-50 dark:bg-red-900/30 dark:text-red-300"
+                      title="Fermer la session"
+                    >
+                      {closingSessionId === session.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+                    </button>
+                  )}
                   {isAdmin && getSessionStatus(session) === SESSION_STATUS_CLOSED && (
                     <button
                       onClick={() => handleReopenSession(session.id)}

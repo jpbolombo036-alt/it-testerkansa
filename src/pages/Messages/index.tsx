@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { fetchAvailableUsers } from '../../api/userApi'
-import { fetchConversation, sendMessage, sendAttachment, Message } from '../../api/messageApi'
+import { fetchConversation, sendMessage, sendAttachment, Message, fetchUnreadConversations, UnreadConversation, markConversationAsRead } from '../../api/messageApi'
 import { User } from '../../hooks/useAuth'
 import { Send, Search, User as UserIcon, MessageSquare, Loader2, Paperclip, ArrowLeft } from 'lucide-react'
 
@@ -15,10 +15,16 @@ export default function MessagesPage() {
   const [isSending, setIsSending] = useState(false)
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null)
   const [showUsersList, setShowUsersList] = useState(true)
+  const [unreadConversations, setUnreadConversations] = useState<UnreadConversation[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetchAvailableUsers().then(setUsers).catch(console.error)
+    fetchUnreadConversations().then(setUnreadConversations).catch(console.error)
+    const interval = setInterval(() => {
+      fetchUnreadConversations().then(setUnreadConversations).catch(console.error)
+    }, 5000)
+    return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
@@ -45,9 +51,15 @@ export default function MessagesPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const handleSelectUser = (user: User) => {
+  const handleSelectUser = async (user: User) => {
     setSelectedUser(user)
     setShowUsersList(false)
+    try {
+      await markConversationAsRead(user.id)
+      setUnreadConversations(prev => prev.filter(c => c.userId !== user.id))
+    } catch (err) {
+      console.error("Erreur marquage messages lus", err)
+    }
   }
 
   const handleBackToUsers = () => {
@@ -110,27 +122,37 @@ export default function MessagesPage() {
         </div>
 
         <div className="flex-1 overflow-y-auto px-2 md:px-3 pb-20 md:pb-6">
-          {users.map((u) => (
-            <button
-              key={u.id}
-              onClick={() => handleSelectUser(u)}
-              className={`group flex w-full items-center gap-3 rounded-2xl p-3 transition-colors ${
-                selectedUser?.id === u.id 
-                  ? 'bg-sky-50 dark:bg-sky-500/10' 
-                  : 'hover:bg-slate-50 dark:hover:bg-slate-800'
-              }`}
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
-                <UserIcon className="h-5 w-5" />
-              </div>
-              <div className="text-left">
-                <p className={`text-sm font-semibold ${selectedUser?.id === u.id ? 'text-sky-700 dark:text-sky-400' : 'text-slate-700 dark:text-slate-200'}`}>
-                  {u.username}
-                </p>
-                <p className="text-xs text-slate-500 truncate max-w-32">{u.email}</p>
-              </div>
-            </button>
-          ))}
+          {users.map((u) => {
+            const unreadCount = unreadConversations.find(c => c.userId === u.id)?.count || 0
+            return (
+              <button
+                key={u.id}
+                onClick={() => handleSelectUser(u)}
+                className={`group flex w-full items-center gap-3 rounded-2xl p-3 transition-colors ${
+                  selectedUser?.id === u.id
+                    ? 'bg-sky-50 dark:bg-sky-500/10'
+                    : 'hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
+              >
+                <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                  <UserIcon className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 inline-flex h-3 w-3 items-center justify-center rounded-full bg-rose-500 text-[10px] text-white shadow-sm">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </div>
+                <div className="text-left">
+                  <p className={`text-sm font-semibold ${selectedUser?.id === u.id ? 'text-sky-700 dark:text-sky-400' : 'text-slate-700 dark:text-slate-200'}`}>
+                    {u.username}
+                  </p>
+                  <p className={`text-xs truncate max-w-32 ${unreadCount > 0 ? 'text-rose-500 font-medium' : 'text-slate-500'}`}>
+                    {unreadCount > 0 ? `${unreadCount} nouveau${unreadCount > 1 ? 'x' : ''} message${unreadCount > 1 ? 's' : ''}` : u.email}
+                  </p>
+                </div>
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -171,8 +193,8 @@ export default function MessagesPage() {
                   return (
                     <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[85%] md:max-w-[70%] rounded-2xl px-3 md:px-4 py-2 text-sm shadow-sm ${
-                        isMe 
-                          ? 'bg-sky-600 text-white rounded-tr-none' 
+                        isMe
+                          ? 'bg-sky-600 text-white rounded-tr-none'
                           : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 rounded-tl-none'
                       }`}>
                         <p>{msg.content}</p>
