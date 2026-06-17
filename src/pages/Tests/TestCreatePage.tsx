@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { createTest } from '../../api/testApi'
@@ -30,6 +30,7 @@ export default function TestCreatePage() {
      resultatAttendu: '',
      resultatObtenu: '',
      statut: 'EN COURS',
+     commentaires: '',
      sessionId: sessionId ?? undefined,
      dateCreation: getLocalDateTime(),
    })
@@ -124,6 +125,17 @@ export default function TestCreatePage() {
               placeholder="Décrivez les étapes du test..."
               className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
               rows={3}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold uppercase text-slate-500">Commentaires</label>
+            <textarea
+              value={formData.commentaires}
+              onChange={(e) => setFormData({...formData, commentaires: e.target.value})}
+              placeholder="Ajoutez des commentaires..."
+              className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
+              rows={2}
             />
           </div>
 
