@@ -128,17 +128,6 @@ export default function TestCreatePage() {
             />
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase text-slate-500">Commentaires</label>
-            <textarea
-              value={formData.commentaires}
-              onChange={(e) => setFormData({...formData, commentaires: e.target.value})}
-              placeholder="Ajoutez des commentaires..."
-              className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
-              rows={2}
-            />
-          </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold uppercase text-slate-500">Résultat attendu</label>
@@ -160,6 +149,17 @@ export default function TestCreatePage() {
                 className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
               />
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold uppercase text-slate-500">Commentaires</label>
+            <textarea
+              value={formData.commentaires}
+              onChange={(e) => setFormData({...formData, commentaires: e.target.value})}
+              placeholder="Ajoutez des commentaires..."
+              className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
+              rows={2}
+            />
           </div>
 
           <div className="flex gap-3 pt-2">
