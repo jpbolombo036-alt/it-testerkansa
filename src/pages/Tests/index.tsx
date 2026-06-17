@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { fetchTestSessions, createTestSession, deleteTestSession, updateTestSession, exportTestSession, SESSION_STATUS_OPEN, SESSION_STATUS_CLOSED, requestCloseSession, TestSession, TestSessionCreateData } from '../../api/testSessionApi'
 import { fetchTestSteps, updateTest, reportBug, createTest, deleteTest, TestStep, Bug } from '../../api/testApi'
@@ -10,6 +10,7 @@ import { useToast } from '../../components/ToastProvider' // Import useToast
 
 export default function TestsPage() {
    const navigate = useNavigate()
+   const [searchParams] = useSearchParams()
    const { user } = useAuth()
    const { showToast } = useToast() // Initialize useToast
    const [sessions, setSessions] = useState<TestSession[]>([])
@@ -169,7 +170,16 @@ const [editingSession, setEditingSession] = useState<TestSession | null>(null)
       nom_document: ''
     })
    
-useEffect(() => {
+const sessionIdFromQuery = searchParams.get('session')
+  const parsedQuerySessionId = sessionIdFromQuery ? Number(sessionIdFromQuery) : null
+
+  useEffect(() => {
+    if (parsedQuerySessionId && sessions.length > 0 && !selectedSessionId) {
+      handleViewTests(parsedQuerySessionId)
+    }
+  }, [parsedQuerySessionId, sessions.length])
+
+ useEffect(() => {
       loadSessions()
       loadUsersList()
     }, [])

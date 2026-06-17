@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { createTest } from '../../api/testApi'
 import { Loader2, Plus, X, FileText, ClipboardCheck, AlertTriangle, CheckCircle2 } from 'lucide-react'
@@ -9,20 +9,30 @@ import type { TestStep } from '../../api/testApi'
 type TestStepCreateData = Partial<TestStep>
 
 export default function TestCreatePage() {
-  const navigate = useNavigate()
-  const { sessionId } = useParams<{ sessionId: string }>()
-  const { showToast } = useToast()
-  const [isSubmitting, setIsSubmitting] = useState(false)
+   const navigate = useNavigate()
+   const [searchParams] = useSearchParams()
+   const { showToast } = useToast()
+   const [isSubmitting, setIsSubmitting] = useState(false)
+   const sessionIdFromQuery = searchParams.get('session')
+   const sessionId = sessionIdFromQuery ? Number(sessionIdFromQuery) : null
 
-  const [formData, setFormData] = useState<TestStepCreateData>({
-    fonction: '',
-    precondition: '',
-    etapes: '',
-    resultatAttendu: '',
-    resultatObtenu: '',
-    statut: 'EN COURS',
-    sessionId: sessionId ? Number(sessionId) : undefined,
-  })
+   const getLocalDateTime = () => {
+     const now = new Date()
+     const offset = now.getTimezoneOffset()
+     const localDate = new Date(now.getTime() - offset * 60 * 1000)
+     return localDate.toISOString().slice(0, 19)
+   }
+
+   const [formData, setFormData] = useState<TestStepCreateData>({
+     fonction: '',
+     precondition: '',
+     etapes: '',
+     resultatAttendu: '',
+     resultatObtenu: '',
+     statut: 'EN COURS',
+     sessionId: sessionId ?? undefined,
+     dateCreation: getLocalDateTime(),
+   })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
