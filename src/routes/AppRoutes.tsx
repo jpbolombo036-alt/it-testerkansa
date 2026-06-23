@@ -31,6 +31,7 @@ import ApplicationEditPage from '../pages/Applications/[id]/edit'
 import CompteEditPage from '../pages/comptes/[id]/edit'
 import TacheEditPage from '../pages/Taches/[id]/edit'
 import TestSessionEditPage from '../pages/Tests/[id]/edit'
+import PresencesPage from '../pages/Presences'
 
 const AppRoutes: React.FC = () => {
   return (
@@ -67,6 +68,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/bloc-notes/:id/edit" element={<BlocNotesPageWrapper />} />
           <Route path="/messages" element={<MessagesPage />} />
           <Route path="/rapports" element={<RapportsPage />} />
+          <Route path="/presences" element={<PresencesPage />} />
           <Route path="/profil" element={<ProfilPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
         </Route>

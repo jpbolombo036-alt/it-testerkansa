@@ -12,6 +12,7 @@ import {
   UserCircle,
   Users,
   Link,
+  Clock,
 } from 'lucide-react'
 
 export const menuItems = [
@@ -24,17 +25,18 @@ export const menuItems = [
   { label: 'Tâches', to: '/taches', icon: FileText },
   { label: 'Messages', to: '/messages', icon: MessageCircle },
   { label: 'Rapports', to: '/rapports', icon: ShieldCheck },
+  { label: 'Présences', to: '/presences', icon: Clock },
   { label: 'Utilisateurs', to: '/users', icon: Users },
   { label: 'Mon Profil', to: '/profil', icon: UserCircle },
 ]
 
 export default function Sidebar() {
   return (
-    <aside className="fixed left-0 top-0 z-20 hidden h-screen w-72 flex-col overflow-y-auto border-r border-slate-200 bg-white/95 px-6 py-8 shadow-soft backdrop-blur-xl transition-colors duration-300 dark:border-slate-800 dark:bg-slate-950/95 md:flex">
+    <aside className="fixed left-0 top-0 z-20 hidden h-screen w-72 flex-col border-r border-slate-200 bg-white/95 px-6 py-8 shadow-soft backdrop-blur-xl transition-colors duration-300 dark:border-slate-800 dark:bg-slate-950/95 md:flex">
       <motion.div
-        initial={{ opacity: 0, x: -20 }} // Animation d'entrée depuis la gauche
+        initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }} // Légère temporisation pour un effet plus doux
+        transition={{ duration: 0.5, delay: 0.1 }}
         className="mb-10 flex items-center gap-3 rounded-[2.5rem] bg-white p-4 shadow-soft transition-colors duration-300 dark:bg-slate-900"
       >
         <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">
@@ -46,7 +48,7 @@ export default function Sidebar() {
         </div>
       </motion.div>
 
-      <nav className="space-y-2">
+      <nav className="flex-1 space-y-2 overflow-y-auto -mx-2 px-2">
         {menuItems.map((item) => {
           const Icon = item.icon
           return (
@@ -74,9 +76,9 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="mt-auto rounded-[2rem] bg-slate-50 p-5 text-sm text-slate-600 shadow-sm transition-colors duration-300 dark:bg-slate-900 dark:text-slate-300">
-        <p className="font-semibold text-slate-900 dark:text-slate-100">Conseils rapides</p>
-        <p className="mt-3 leading-6">Utilisez le menu pour parcourir vos applications, comptes et rapports de sécurité.</p>
+      <div className="mt-auto rounded-[1.5rem] bg-slate-50 p-3 text-xs text-slate-600 shadow-sm transition-colors duration-300 dark:bg-slate-900 dark:text-slate-300">
+        <p className="font-semibold text-slate-900 dark:text-slate-100 mb-1">Conseils rapides</p>
+        <p className="leading-5">Utilisez le menu pour parcourir vos applications, comptes et rapports de sécurité.</p>
       </div>
     </aside>
   )
