@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react'
+﻿import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { fetchApplications, createApplication, deleteApplication, Application, ApplicationCreateData } from '../../api/applicationApi'
-import { Loader2, Layers, Plus, Calendar, X, Edit3, Trash2, Package, Eye } from 'lucide-react'
+import { Loader2, Layers, Plus, Calendar, X, Edit3, Trash2, Package, Eye, ChevronLeft, ChevronRight, Search } from 'lucide-react'
 import { useToast } from '../../components/ToastProvider'
+import { usePagination } from '../../hooks/usePagination'
+
+const ITEMS_PER_PAGE = 25
 
 export default function ApplicationsPage() {
    const navigate = useNavigate()
@@ -12,13 +15,22 @@ export default function ApplicationsPage() {
    const [showApplicationForm, setShowApplicationForm] = useState(false)
    const [isSubmitting, setIsSubmitting] = useState(false)
    const { showToast } = useToast()
+const [searchTerm, setSearchTerm] = useState('')
 
-   const [applicationFormData, setApplicationFormData] = useState<ApplicationCreateData>({
-      nom: '',
-      description: '',
-      version: '',
-      environnement: 'PRODUCTION'
-    })
+    const [applicationFormData, setApplicationFormData] = useState<ApplicationCreateData>({
+       nom: '',
+       description: '',
+       version: '',
+       environnement: 'PRODUCTION'
+     })
+
+    const { currentPage, setCurrentPage, paginatedItems: paginatedApplications, totalPages, totalItems } = usePagination(
+      useMemo(() => applications.filter(app => 
+        app.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.description.toLowerCase().includes(searchTerm.toLowerCase())
+      ), [applications, searchTerm]),
+      ITEMS_PER_PAGE
+    )
 
    useEffect(() => {
      loadApplications()
@@ -48,9 +60,9 @@ export default function ApplicationsPage() {
         setApplications([newApplication, ...applications])
         setShowApplicationForm(false)
         setApplicationFormData({ nom: '', description: '', version: '', environnement: 'PRODUCTION' })
-        showToast('success', 'Application créée', 'La nouvelle application a été ajoutée avec succès.')
+        showToast('success', 'Application crÃ©Ã©e', 'La nouvelle application a Ã©tÃ© ajoutÃ©e avec succÃ¨s.')
       } catch (error) {
-        showToast('error', 'Erreur', "Erreur lors de la création de l'application.")
+        showToast('error', 'Erreur', "Erreur lors de la crÃ©ation de l'application.")
       } finally {
         setIsSubmitting(false)
       }
@@ -61,7 +73,7 @@ export default function ApplicationsPage() {
     try {
        await deleteApplication(appId)
        setApplications(applications.filter(app => app.id !== appId))
-       showToast('success', 'Application supprimée', "L'application a été supprimée avec succès.")
+       showToast('success', 'Application supprimÃ©e', "L'application a Ã©tÃ© supprimÃ©e avec succÃ¨s.")
     } catch (error) {
        showToast('error', 'Erreur', "Erreur lors de la suppression de l'application.")
     }
@@ -81,18 +93,18 @@ export default function ApplicationsPage() {
          initial={{ opacity: 0, y: -20 }}
          animate={{ opacity: 1, y: 0 }}
          transition={{ duration: 0.5 }}
-         className="rounded-[2.5rem] bg-white p-6 shadow-soft dark:bg-slate-900"
-       >
-         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-           <div className="flex items-center gap-4">
-             <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">
-               <Layers className="h-10 w-10" />
-             </div>
-             <div>
-               <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Applications</h1>
-               <p className="text-slate-500 dark:text-slate-400">Gérez les versions APK et les déploiements</p>
-             </div>
-           </div>
+className="rounded-[2.5rem] bg-white p-6 shadow-md dark:bg-slate-900"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">
+                <Layers className="h-10 w-10" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Applications</h1>
+                <p className="text-slate-500 dark:text-slate-400">Gérez les versions APK et les déploiements</p>
+              </div>
+            </div>
 
            <button
              onClick={() => navigate('/applications/new')}
@@ -110,7 +122,7 @@ export default function ApplicationsPage() {
              initial={{ height: 0, opacity: 0 }}
              animate={{ height: 'auto', opacity: 1 }}
              exit={{ height: 0, opacity: 0 }}
-             className="rounded-[2.5rem] bg-white p-6 shadow-soft dark:bg-slate-900"
+             className="rounded-[2.5rem] bg-white p-6 shadow-md dark:bg-slate-900"
            >
              <div className="mb-4 flex items-center justify-between">
                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Ajouter une application</h2>
@@ -137,7 +149,7 @@ export default function ApplicationsPage() {
                      onChange={(e) => setApplicationFormData({...applicationFormData, environnement: e.target.value})}
                      className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
                    >
-                     <option value="DEVELOPPEMENT">Développement</option>
+                     <option value="DEVELOPPEMENT">DÃ©veloppement</option>
                      <option value="STAGING">En test</option>
                      <option value="PRODUCTION">Production</option>
                    </select>
@@ -165,15 +177,27 @@ export default function ApplicationsPage() {
                  </div>
                </div>
                <button disabled={isSubmitting} className="rounded-2xl bg-sky-600 px-6 py-2 font-bold text-white shadow-lg transition hover:bg-sky-700 disabled:opacity-50">
-                 {isSubmitting ? <Loader2 className="animate-spin" /> : "Créer l'application"}
+                 {isSubmitting ? <Loader2 className="animate-spin" /> : "CrÃ©er l'application"}
                </button>
              </form>
            </motion.div>
          )}
-       </AnimatePresence>
+</AnimatePresence>
 
-       {/* Desktop/Tablet View (Table) */}
-       <div className="hidden sm:block overflow-x-auto">
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Rechercher une application..."
+            value={searchTerm}
+            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(0) }}
+            className="w-full rounded-2xl border-none bg-white py-3 pl-12 pr-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-900"
+          />
+        </div>
+
+        {/* Desktop/Tablet View (Table) */}
+        <div className="hidden sm:block overflow-x-auto">
          <table className="w-full text-left border-separate border-spacing-y-4">
            <thead>
              <tr className="text-xs font-extrabold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
@@ -181,17 +205,17 @@ export default function ApplicationsPage() {
                <th className="px-6 py-3">Description</th>
                <th className="px-6 py-3">Version</th>
                <th className="px-6 py-3">Environnement</th>
-               <th className="px-6 py-3">Date de création</th>
+               <th className="px-6 py-3">Date de crÃ©ation</th>
                <th className="px-6 py-3 text-right">Actions</th>
              </tr>
            </thead>
            <tbody>
-             {applications.map((app) => (
-               <motion.tr
-                 layout
-                 key={app.id}
-                 className="group transition-all duration-300 hover:translate-x-1"
-               >
+{paginatedApplications.map((app) => (
+                <motion.tr
+                  layout
+                  key={app.id}
+                  className="group transition-all duration-300 hover:translate-x-1"
+                >
                  <td className="rounded-l-[1.5rem] bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-all shadow-sm group-hover:shadow-md">
                    <div className="flex items-center gap-3">
                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white font-extrabold text-sky-600 shadow-sm dark:bg-slate-950 dark:text-sky-400">
@@ -247,24 +271,38 @@ export default function ApplicationsPage() {
              ))}
            </tbody>
          </table>
-         {applications.length === 0 && (
-           <div className="py-20 text-center text-slate-500">
-             <p className="text-sm">Aucune application trouvée.</p>
-           </div>
-         )}
-       </div>
+{paginatedApplications.length === 0 && (
+            <div className="py-20 text-center text-slate-500">
+              <p className="text-sm">Aucune application trouvée.</p>
+            </div>
+          )}
+{totalPages > 1 && (
+             <div className="flex items-center justify-between pt-4">
+               <p className="text-sm text-slate-500">{totalItems} éléments</p>
+               <div className="flex items-center gap-2">
+                 <button onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={currentPage === 0} className="p-2 rounded-lg disabled:opacity-50">
+                   <ChevronLeft className="h-4 w-4" />
+                 </button>
+                 <span className="text-sm font-medium">Page {currentPage + 1} / {totalPages}</span>
+                 <button onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))} disabled={currentPage >= totalPages - 1} className="p-2 rounded-lg disabled:opacity-50">
+                   <ChevronRight className="h-4 w-4" />
+                 </button>
+               </div>
+             </div>
+           )}
+        </div>
 
-       {/* Mobile View (Cards) */}
+        {/* Mobile View (Cards) */}
        <div className="sm:hidden grid gap-4">
-         {applications.map((app) => (
-           <motion.div
-             layout
-             key={app.id}
-             initial={{ opacity: 0, y: 20 }}
-             animate={{ opacity: 1, y: 0 }}
-             transition={{ duration: 0.3 }}
-             className="rounded-[2rem] bg-white p-4 shadow-soft dark:bg-slate-900"
-           >
+{paginatedApplications.map((app) => (
+            <motion.div
+              layout
+              key={app.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="rounded-[2rem] bg-white p-4 shadow-md dark:bg-slate-900"
+            >
              <div className="flex-1">
                <div className="flex items-center gap-3 mb-2">
                  <div className="p-2 rounded-xl bg-sky-50 dark:bg-sky-500/10 text-sky-600">
@@ -311,3 +349,4 @@ export default function ApplicationsPage() {
      </div>
    )
  }
+
