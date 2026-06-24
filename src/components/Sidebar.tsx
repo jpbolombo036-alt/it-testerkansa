@@ -13,6 +13,7 @@ import {
   Users,
   Link,
   Clock,
+  FolderOpen,
 } from 'lucide-react'
 
 export const menuItems = [
@@ -27,6 +28,7 @@ export const menuItems = [
   { label: 'Rapports', to: '/rapports', icon: ShieldCheck },
   { label: 'Présences', to: '/presences', icon: Clock },
   { label: 'Utilisateurs', to: '/users', icon: Users },
+  { label: 'Archive Documents', to: '/document-archive', icon: FolderOpen },
   { label: 'Mon Profil', to: '/profil', icon: UserCircle },
 ]
 

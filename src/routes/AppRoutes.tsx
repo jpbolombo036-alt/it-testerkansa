@@ -32,6 +32,10 @@ import CompteEditPage from '../pages/comptes/[id]/edit'
 import TacheEditPage from '../pages/Taches/[id]/edit'
 import TestSessionEditPage from '../pages/Tests/[id]/edit'
 import PresencesPage from '../pages/Presences'
+import DocumentArchivePage from '../pages/DocumentArchive'
+import DocumentDetailPage from '../pages/DocumentArchive/[id]'
+import DocumentPreviewPage from '../pages/DocumentArchive/[id]/preview'
+import DocumentUploadPage from '../pages/DocumentArchive/upload'
 
 const AppRoutes: React.FC = () => {
   return (
@@ -67,6 +71,10 @@ const AppRoutes: React.FC = () => {
           <Route path="/bloc-notes/:id" element={<BlocNotesPageWrapper />} />
           <Route path="/bloc-notes/:id/edit" element={<BlocNotesPageWrapper />} />
           <Route path="/messages" element={<MessagesPage />} />
+          <Route path="/document-archive" element={<DocumentArchivePage />} />
+          <Route path="/document-archive/upload" element={<DocumentUploadPage />} />
+          <Route path="/document-archive/:id" element={<DocumentDetailPage />} />
+          <Route path="/document-archive/:id/preview" element={<DocumentPreviewPage />} />
           <Route path="/rapports" element={<RapportsPage />} />
           <Route path="/presences" element={<PresencesPage />} />
           <Route path="/profil" element={<ProfilPage />} />
