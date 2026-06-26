@@ -18,7 +18,8 @@ export interface TestStep {
    dateCreation?: string
    createdBy?: number
    createdByUsername?: string
-   executeur?: string // Le nom d'utilisateur de l'agent
+   executeur?: string
+   resolved?: boolean
  }
 
 export interface Bug {
@@ -90,6 +91,15 @@ export async function reportBug(bugData: Omit<Bug, 'id'>) {
 export async function fetchBugsByStep(testStepId: number) {
   const response = await api.get<Bug[]>(`/bugs/step/${testStepId}`)
   return response.data
+}
+
+/**
+ * PUT /tests/{id}/resolved : Basculer le statut résolu d'un test
+ */
+export async function toggleTestResolved(id: number) {
+  const response = await api.get<TestStep>(`/tests/${id}`)
+  const currentResolved = (response.data as any).resolved ?? false
+  return api.put<TestStep>(`/tests/${id}`, { resolved: !currentResolved })
 }
 
 /**

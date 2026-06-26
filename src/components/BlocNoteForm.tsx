@@ -81,7 +81,7 @@ export const BlocNoteForm: React.FC<BlocNoteFormProps> = ({ note, onSuccess, onC
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-lg rounded-[2.5rem] bg-white p-6 shadow-2xl dark:bg-slate-900 max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-lg rounded-[2.5rem] bg-white p-6 shadow-2xl dark:bg-slate-900 max-h-[90vh] overflow-y-auto hide-scrollbar"
       >
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">

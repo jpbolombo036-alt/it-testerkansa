@@ -2,10 +2,14 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { NavLink } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
-import { menuItems } from './Sidebar'
+import { baseMenuItems } from './Sidebar'
+import { useAuth } from '../hooks/useAuth'
 
 export default function MobileMenu() {
   const [open, setOpen] = useState(false)
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'ADMIN'
+  const visibleMenuItems = baseMenuItems.filter(item => !item.adminOnly || isAdmin)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -42,7 +46,7 @@ export default function MobileMenu() {
               animate={{ x: 0 }}
               exit={{ x: -320 }}
               transition={{ type: 'spring', damping: 26, stiffness: 260 }}
-              className="fixed left-0 top-0 z-50 flex h-screen w-80 flex-col overflow-y-auto border-r border-slate-200 bg-white/95 px-6 py-8 shadow-2xl backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/95"
+              className="fixed left-0 top-0 z-50 flex h-screen w-80 flex-col overflow-y-auto hide-scrollbar border-r border-slate-200 bg-white/95 px-6 py-8 shadow-2xl backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/95"
             >
               <div className="mb-8 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -62,7 +66,7 @@ export default function MobileMenu() {
               </div>
 
               <nav className="space-y-1">
-{menuItems.map((item) => {
+                {visibleMenuItems.map((item) => {
                     const Icon = item.icon
                     return (
                       <NavLink

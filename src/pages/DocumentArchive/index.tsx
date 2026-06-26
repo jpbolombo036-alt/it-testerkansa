@@ -199,8 +199,8 @@ export default function DocumentArchivePage() {
         transition={{ duration: 0.3 }}
         className="rounded-[2rem] bg-white p-4 shadow-soft dark:bg-slate-900"
       >
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
+        <div className="flex flex-col gap-3">
+          <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
@@ -224,36 +224,39 @@ export default function DocumentArchivePage() {
               </button>
             )}
           </div>
-          <button
-            onClick={() => handleSearch(searchTerm)}
-            className="flex items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-violet-700"
-          >
-            <Search className="h-4 w-4" />
-            Rechercher
-          </button>
-          <select
-            value={selectedCategory}
-            onChange={(e) => {
-              setSelectedCategory(e.target.value)
-              handleCategoryFilter(e.target.value)
-            }}
-            className="rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-violet-400 dark:bg-slate-950"
-          >
-            {DOCUMENT_CATEGORIES.map((cat) => (
-              <option key={cat.value} value={cat.value}>
-                {cat.label}
-              </option>
-            ))}
-          </select>
-          {(useBackendSearch || useBackendCategory) && (
+          <div className="flex flex-wrap items-center gap-2">
             <button
-              onClick={loadDocuments}
-              className="flex items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+              onClick={() => handleSearch(searchTerm)}
+              className="flex items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-violet-700"
             >
-              <X className="h-4 w-4" />
-              Réinitialiser
+              <Search className="h-4 w-4" />
+              Rechercher
             </button>
-          )}
+            <select
+              value={selectedCategory}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value)
+                handleCategoryFilter(e.target.value)
+              }}
+              className="flex-1 min-w-[140px] rounded-xl border-none bg-slate-50 py-2.5 px-3 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-violet-400 dark:bg-slate-950"
+            >
+              <option value="">Toutes catégories</option>
+              {DOCUMENT_CATEGORIES.map((cat) => (
+                <option key={cat.value} value={cat.value}>
+                  {cat.label}
+                </option>
+              ))}
+            </select>
+            {(useBackendSearch || useBackendCategory) && (
+              <button
+                onClick={loadDocuments}
+                className="flex items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+              >
+                <X className="h-4 w-4" />
+                Réinitialiser
+              </button>
+            )}
+          </div>
         </div>
       </motion.div>
 

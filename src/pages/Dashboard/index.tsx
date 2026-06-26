@@ -114,18 +114,22 @@ export default function DashboardPage() {
       <div className="grid gap-4 xl:grid-cols-3">
         <div className="xl:col-span-2 rounded-[2rem] bg-white p-6 shadow-soft dark:bg-slate-900">
           <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Statistiques des tests</h2>
-          <div className="grid grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             <div className="text-center">
               <p className="text-2xl font-bold text-emerald-600">{stats.testsOk}</p>
-              <p className="text-xs text-slate-500">OK ({stats.testsRateOk}%)</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">OK ({stats.testsRateOk}%)</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-rose-600">{stats.testsBug}</p>
-              <p className="text-xs text-slate-500">BUG ({stats.testsRateBug}%)</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">BUG ({stats.testsRateBug}%)</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-sky-600">{stats.testsResolved}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Résolus ({stats.testsRateResolved}%)</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-amber-600">{stats.testsEnCours}</p>
-              <p className="text-xs text-slate-500">En cours ({stats.testsRatePending}%)</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">En cours ({stats.testsRatePending}%)</p>
             </div>
           </div>
           <div className="h-[180px]">
@@ -151,15 +155,23 @@ export default function DashboardPage() {
           <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Résumé</h2>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-slate-500">Sessions</span>
-              <span className="font-bold">{stats.sessions}</span>
+              <span className="text-slate-500 dark:text-slate-400">Sessions</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{stats.sessions}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Bugs signalés</span>
-              <span className="font-bold">{stats.bugReports}</span>
+              <span className="text-slate-500 dark:text-slate-400">Bugs signalés</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{stats.bugReports}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Taux réussite</span>
+              <span className="text-slate-500 dark:text-slate-400">Tests traités</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{stats.testsResolved} / {stats.tests}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500 dark:text-slate-400">Taux de traitement</span>
+              <span className="font-bold text-emerald-600">{stats.testsRateResolved}%</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500 dark:text-slate-400">Taux réussite</span>
               <span className="font-bold text-emerald-600">{stats.testsRateOk}%</span>
             </div>
           </div>
@@ -172,7 +184,7 @@ export default function DashboardPage() {
           <User className="h-5 w-5 text-sky-600" />
           <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Performance des agents (Bugs trouvés)</h2>
         </div>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto hide-scrollbar">
           <table className="w-full text-left border-separate border-spacing-y-2">
             <thead>
               <tr className="text-xs font-bold uppercase tracking-wider text-slate-400">
@@ -218,7 +230,7 @@ export default function DashboardPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={4} className="text-center py-4 text-slate-500 text-sm">Aucune donnée de performance disponible</td>
+                  <td colSpan={4} className="text-center py-4 text-sm text-slate-500 dark:text-slate-400">Aucune donnée de performance disponible</td>
                 </tr>
               )}
             </tbody>

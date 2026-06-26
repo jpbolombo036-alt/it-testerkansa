@@ -205,7 +205,7 @@ export default function DocumentDetailPage() {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-slate-100 dark:border-slate-800 mt-6">
+         <div className="flex flex-row flex-wrap gap-3 pt-6 border-t border-slate-100 dark:border-slate-800 mt-6">
           <button
             onClick={() => navigate(`/document-archive/${doc.id}/preview`)}
             className="flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-6 py-2.5 font-bold text-white transition hover:bg-violet-700"
@@ -219,13 +219,6 @@ export default function DocumentDetailPage() {
           >
             <Download className="h-4 w-4" />
             Télécharger
-          </button>
-          <button
-            onClick={handleDelete}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-rose-100 px-6 py-2.5 font-bold text-rose-700 transition hover:bg-rose-200 dark:bg-rose-900/30 dark:text-rose-300"
-          >
-            <Trash2 className="h-4 w-4" />
-            Supprimer
           </button>
         </div>
       </motion.div>

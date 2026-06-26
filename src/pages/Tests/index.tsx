@@ -2,9 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { fetchTestSessions, createTestSession, deleteTestSession, updateTestSession, exportTestSession, SESSION_STATUS_OPEN, SESSION_STATUS_CLOSED, requestCloseSession, TestSession, TestSessionCreateData } from '../../api/testSessionApi'
-import { fetchTestSteps, updateTest, reportBug, createTest, deleteTest, TestStep, Bug } from '../../api/testApi'
+import { fetchTestSteps, updateTest, reportBug, createTest, deleteTest, toggleTestResolved, TestStep, Bug } from '../../api/testApi'
 import { fetchUsers, User } from '../../api/userApi'
-import { CheckCircle, XCircle, Bug as BugIcon, Loader2, ClipboardCheck, Plus, Calendar, X, Lock, Unlock, Eye, FileText, Edit3, Download, Trash2, Search, User as UserIcon } from 'lucide-react'
+import { CheckCircle, XCircle, Bug as BugIcon, Loader2, ClipboardCheck, Plus, Calendar, X, Lock, Unlock, Eye, FileText, Edit3, Download, Trash2, Search, User as UserIcon, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ToastProvider' // Import useToast
 
@@ -36,10 +36,27 @@ const [editingTest, setEditingTest] = useState<TestStep | null>(null)
     const [filterCreatorId, setFilterCreatorId] = useState<number | null>(null)
     const [users, setUsers] = useState<User[]>([])
     
+    const handleToggleResolved = async (test: TestStep) => {
+      try {
+        const newResolved = !(test.resolved ?? false)
+        await toggleTestResolved(test.id)
+        setSelectedSessionTests(prev => prev.map(t => t.id === test.id ? { ...t, resolved: newResolved } : t))
+        if (editingTest?.id === test.id) {
+          setEditingTest({ ...editingTest, resolved: newResolved })
+        }
+        const resolvedMap = getResolvedMap()
+        resolvedMap[test.id] = newResolved
+        saveResolvedMap(resolvedMap)
+        showToast('success', newResolved ? 'Test marqué comme résolu' : 'Test marqué comme non résolu', '')
+      } catch {
+        showToast('error', 'Erreur', 'Impossible de changer le statut de résolution.')
+      }
+    }
+
     const handleViewTest = (test: TestStep) => {
-     setEditingTest(test)
-     setShowViewModal(true)
-   }
+      setEditingTest(test)
+      setShowViewModal(true)
+    }
    
    const handleEditTest = (test: TestStep) => {
      setEditingTest({...test})
@@ -167,7 +184,8 @@ const [editingSession, setEditingSession] = useState<TestSession | null>(null)
       description: '',
       environnement: 'PRODUCTION',
       version: '',
-      nom_document: ''
+      role: '',
+      plateforme: 'Web'
     })
    
 const sessionIdFromQuery = searchParams.get('session')
@@ -244,6 +262,16 @@ const sessionIdFromQuery = searchParams.get('session')
       });
     }, [sortedSessions, searchTerm, filterCreatorId]);
 
+    const getSessionTestStats = (session: TestSession) => {
+      const tests = session.tests || []
+      const total = tests.length
+      const resolved = tests.filter(t => t.resolved).length
+      const ok = tests.filter(t => t.statut === 'OK').length
+      const bug = tests.filter(t => t.statut === 'BUG').length
+      const enCours = tests.filter(t => t.statut === 'EN COURS' || t.statut === 'PENDING').length
+      return { total, resolved, ok, bug, enCours }
+    }
+
     const handleCreateSession = async (e: React.FormEvent) => {
       e.preventDefault()
       try {
@@ -251,7 +279,7 @@ const sessionIdFromQuery = searchParams.get('session')
         const newSession = await createTestSession(sessionFormData)
         setSessions([newSession, ...sessions])
         setShowSessionForm(false)
-        setSessionFormData({ nom: '', description: '', environnement: 'PRODUCTION', version: '', nom_document: '' })
+        setSessionFormData({ nom: '', description: '', environnement: 'PRODUCTION', version: '', role: '', plateforme: 'Web' })
         showToast('success', 'Session créée', 'La session de test a été créée avec succès.')
       } catch {
         showToast('error', 'Erreur', 'Erreur lors de la création de la session.')
@@ -260,15 +288,39 @@ const sessionIdFromQuery = searchParams.get('session')
       }
     }
    
-   const handleViewTests = async (sessionId: number) => {
-     setSelectedSessionId(sessionId)
-     try {
-       const tests = await fetchTestSteps(sessionId)
-       setSelectedSessionTests(tests)
-     } catch (err) {
-       console.error("Erreur chargement tests", err)
-     }
-   }
+    const RESOLVED_STORAGE_KEY = 'testResolvedStatus'
+
+    const getResolvedMap = (): Record<number, boolean> => {
+      try {
+        const raw = localStorage.getItem(RESOLVED_STORAGE_KEY)
+        return raw ? JSON.parse(raw) : {}
+      } catch {
+        return {}
+      }
+    }
+
+    const saveResolvedMap = (map: Record<number, boolean>) => {
+      try {
+        localStorage.setItem(RESOLVED_STORAGE_KEY, JSON.stringify(map))
+      } catch {
+        // storage full or unavailable
+      }
+    }
+
+    const handleViewTests = async (sessionId: number) => {
+      setSelectedSessionId(sessionId)
+      try {
+        const tests = await fetchTestSteps(sessionId)
+        const resolvedMap = getResolvedMap()
+        const merged = tests.map(t => ({
+          ...t,
+          resolved: t.resolved ?? resolvedMap[t.id] ?? false
+        }))
+        setSelectedSessionTests(merged)
+      } catch (err) {
+        console.error("Erreur chargement tests", err)
+      }
+    }
    
 const handleStatusChange = async (stepId: number, statut: string) => {
       try {
@@ -389,18 +441,41 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
                      className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
                    />
                  </div>
-                 <div className="space-y-1.5">
-                   <label className="text-xs font-bold uppercase text-slate-500">Environnement</label>
-                   <select 
-                     value={sessionFormData.environnement}
-                     onChange={(e) => setSessionFormData({...sessionFormData, environnement: e.target.value})}
-                     className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
-                   >
-                     <option value="DEVELOPPEMENT">Développement</option>
-                     <option value="STAGING">En test</option>
-                     <option value="PRODUCTION">Production</option>
-                   </select>
-                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase text-slate-500">Environnement</label>
+                    <select
+                      value={sessionFormData.environnement}
+                      onChange={(e) => setSessionFormData({...sessionFormData, environnement: e.target.value})}
+                      className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
+                    >
+                      <option value="DEVELOPPEMENT">Développement</option>
+                      <option value="STAGING">En test</option>
+                      <option value="PRODUCTION">Production</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase text-slate-500">Rôle</label>
+                    <input
+                      type="text"
+                      value={sessionFormData.role}
+                      onChange={(e) => setSessionFormData({...sessionFormData, role: e.target.value})}
+                      placeholder="Ex: Testeur, Responsable QA..."
+                      className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase text-slate-500">Plateforme</label>
+                    <select
+                      value={sessionFormData.plateforme}
+                      onChange={(e) => setSessionFormData({...sessionFormData, plateforme: e.target.value})}
+                      className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
+                    >
+                      <option value="Web">Web</option>
+                      <option value="Mobile">Mobile</option>
+                    </select>
+                  </div>
+                </div>
                </div>
                <div className="space-y-1.5">
                  <label className="text-xs font-bold uppercase text-slate-500">Description</label>
@@ -421,19 +496,9 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
                      placeholder="ex: 1.0.0"
                      className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
                    />
-                 </div>
-                 <div className="space-y-1.5">
-                   <label className="text-xs font-bold uppercase text-slate-500">Document</label>
-                   <input 
-                     type="text" 
-                     value={sessionFormData.nom_document}
-                     onChange={(e) => setSessionFormData({...sessionFormData, nom_document: e.target.value})}
-                     placeholder="Nom du document"
-                     className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
-                   />
-                 </div>
-               </div>
-               <button disabled={isSubmitting} className="rounded-2xl bg-sky-600 px-6 py-2 font-bold text-white shadow-lg transition hover:bg-sky-700 disabled:opacity-50">
+                  </div>
+                </div>
+                <button disabled={isSubmitting} className="rounded-2xl bg-sky-600 px-6 py-2 font-bold text-white shadow-lg transition hover:bg-sky-700 disabled:opacity-50">
                  {isSubmitting ? <Loader2 className="animate-spin" /> : "Créer"}
                </button>
              </form>
@@ -441,53 +506,55 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
          )}
 </AnimatePresence>
 
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="rounded-[2rem] bg-white p-4 shadow-soft dark:bg-slate-900"
-      >
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Rechercher par nom, description ou créateur..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-xl border-none bg-slate-50 py-2.5 pl-10 pr-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
-            />
+      {selectedSessionId === null && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="rounded-[2rem] bg-white p-4 shadow-soft dark:bg-slate-900"
+        >
+          <div className="flex flex-col gap-3">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Rechercher par nom, description ou créateur..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full rounded-xl border-none bg-slate-50 py-2.5 pl-10 pr-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={sortField}
+                onChange={(e) => setSortField(e.target.value as any)}
+                className="flex-1 min-w-[140px] rounded-xl border-none bg-slate-50 py-2.5 px-3 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
+              >
+                <option value="nom">Trier par nom</option>
+                <option value="dateCreation">Trier par date</option>
+                <option value="createdByUsername">Trier par créateur</option>
+              </select>
+              <select
+                value={filterCreatorId ?? ''}
+                onChange={(e) => setFilterCreatorId(e.target.value ? Number(e.target.value) : null)}
+                className="flex-1 min-w-[140px] rounded-xl border-none bg-slate-50 py-2.5 px-3 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
+              >
+                <option value="">Tous les créateurs</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>{u.username}</option>
+                ))}
+              </select>
+              <button
+                onClick={() => setSortDirection(dir => dir === 'asc' ? 'desc' : 'asc')}
+                className="rounded-xl bg-slate-100 px-3 py-2.5 text-xs font-bold uppercase text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                title={sortDirection === 'asc' ? 'Tri croissant' : 'Tri décroissant'}
+              >
+                {sortDirection === 'asc' ? '↑' : '↓'}
+              </button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <select
-              value={sortField}
-              onChange={(e) => setSortField(e.target.value as any)}
-              className="rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
-            >
-              <option value="nom">Trier par nom</option>
-              <option value="dateCreation">Trier par date</option>
-              <option value="createdByUsername">Trier par créateur</option>
-            </select>
-            <select
-              value={filterCreatorId ?? ''}
-              onChange={(e) => setFilterCreatorId(e.target.value ? Number(e.target.value) : null)}
-              className="rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
-            >
-              <option value="">Tous les créateurs</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>{u.username}</option>
-              ))}
-            </select>
-            <button
-              onClick={() => setSortDirection(dir => dir === 'asc' ? 'desc' : 'asc')}
-              className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold uppercase text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
-              title={sortDirection === 'asc' ? 'Tri croissant' : 'Tri décroissant'}
-            >
-              {sortDirection === 'asc' ? '↑' : '↓'}
-            </button>
-          </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
 
       {selectedSessionId === null ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -511,15 +578,32 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
                       Créé par : {session.createdByUsername}
                     </p>
                   )}
-                  <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                    <span className="flex items-center gap-1 text-slate-500">
-                      <Calendar className="h-3 w-3" />
-                      {new Date(session.dateCreation).toLocaleDateString()}
-                    </span>
-                    <span className="rounded-lg bg-slate-100 px-2 py-1 dark:bg-slate-800">{session.environnement}</span>
-                  </div>
-                </div>
-<div className="mt-4 flex flex-col sm:flex-row gap-2">
+                   <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                     <span className="flex items-center gap-1 text-slate-500">
+                       <Calendar className="h-3 w-3" />
+                       {new Date(session.dateCreation).toLocaleDateString()}
+                     </span>
+                     <span className="rounded-lg bg-slate-100 px-2 py-1 dark:bg-slate-800">{session.environnement}</span>
+                   </div>
+                   <div className="mt-3 flex flex-wrap gap-1.5 text-[10px] font-bold">
+                     <span className="rounded-lg bg-slate-100 px-2 py-1 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                       Total: {getSessionTestStats(session).total}
+                     </span>
+                     <span className="rounded-lg bg-emerald-100 px-2 py-1 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                       Résolus: {getSessionTestStats(session).resolved}
+                     </span>
+                     <span className="rounded-lg bg-emerald-100 px-2 py-1 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                       OK: {getSessionTestStats(session).ok}
+                     </span>
+                     <span className="rounded-lg bg-rose-100 px-2 py-1 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">
+                       BUG: {getSessionTestStats(session).bug}
+                     </span>
+                     <span className="rounded-lg bg-amber-100 px-2 py-1 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+                       En cours: {getSessionTestStats(session).enCours}
+                     </span>
+                   </div>
+                 </div>
+<div className="mt-4 flex flex-row flex-wrap gap-2">
                   <button
                     onClick={() => handleViewTests(session.id)}
                     className="flex items-center justify-center rounded-2xl bg-slate-100 p-2.5 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
@@ -595,10 +679,11 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
           </div>
         ) : (
          <div className="space-y-6">
-<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
-                  Tests de la session #{selectedSessionId}
+          <div className="rounded-[2rem] bg-white p-6 shadow-soft dark:bg-slate-900">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex-1">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                  Tests : {sessions.find(s => s.id === selectedSessionId)?.nom || `Session #${selectedSessionId}`}
                 </h2>
                 {currentSessionStatus === SESSION_STATUS_CLOSED && (
                   <div className="mt-2 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 ring-1 ring-red-100 dark:bg-red-950/30 dark:text-red-300 dark:ring-red-900/50">
@@ -611,7 +696,7 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
                   </p>
                 )}
               </div>
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-row flex-wrap gap-2">
                 <button
                   onClick={() => navigate(`/tests/test/new?session=${selectedSessionId || ''}`)}
                   disabled={currentSessionStatus === SESSION_STATUS_CLOSED && !isAdmin}
@@ -628,6 +713,7 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
                 </button>
               </div>
             </div>
+          </div>
             
             <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-left border-separate border-spacing-y-4">
@@ -650,9 +736,18 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
                       key={step.id} 
                       className="group transition-all duration-300 hover:translate-x-1"
                     >
-                      <td className="rounded-l-[1.5rem] bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors shadow-sm group-hover:shadow-md">
-                        <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{step.fonction}</p>
-                      </td>
+                       <td className="rounded-l-[1.5rem] bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors shadow-sm group-hover:shadow-md">
+                         <div className="flex items-center gap-2">
+                           <button
+                             onClick={() => handleToggleResolved(step)}
+                             className={`p-1 rounded-lg transition-colors ${step.resolved ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-300 hover:text-slate-400'}`}
+                             title={step.resolved ? 'Marquer comme non résolu' : 'Marquer comme résolu'}
+                           >
+                             <CheckCircle2 className="h-4 w-4" />
+                           </button>
+                           <p className={`text-sm font-bold ${step.resolved ? 'line-through text-slate-400' : 'text-slate-900 dark:text-slate-100'}`}>{step.fonction}</p>
+                         </div>
+                       </td>
                       <td className="bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors shadow-sm group-hover:shadow-md">
                         <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 max-w-[150px]">{step.precondition || '-'}</p>
                       </td>
@@ -668,16 +763,23 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
                       <td className="bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors shadow-sm group-hover:shadow-md">
                         <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">{step.executeur || 'Non assigné'}</p>
                       </td>
-                      <td className="bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors shadow-sm group-hover:shadow-md">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider ${
-                          step.statut === 'OK' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' :
-                          step.statut === 'BUG' ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300' :
-                          'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'
-                        }`}>
-                          <span className={`mr-1.5 h-1.5 w-1.5 rounded-full ${step.statut === 'OK' ? 'bg-emerald-500' : step.statut === 'BUG' ? 'bg-rose-500' : 'bg-amber-500'}`} />
-                          {step.statut}
-                        </span>
-                      </td>
+                       <td className="bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors shadow-sm group-hover:shadow-md">
+                         <div className="flex flex-wrap items-center gap-1.5">
+                           <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider ${
+                             step.statut === 'OK' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' :
+                             step.statut === 'BUG' ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300' :
+                             'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'
+                           }`}>
+                             <span className={`mr-1.5 h-1.5 w-1.5 rounded-full ${step.statut === 'OK' ? 'bg-emerald-500' : step.statut === 'BUG' ? 'bg-rose-500' : 'bg-amber-500'}`} />
+                             {step.statut}
+                           </span>
+                           {step.resolved && (
+                             <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                               Résolu
+                             </span>
+                           )}
+                         </div>
+                       </td>
                       <td className="rounded-r-[1.5rem] bg-slate-50/50 p-5 text-right dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors shadow-sm group-hover:shadow-md">
                         <div className="flex justify-end gap-2">
                           <button 
@@ -721,7 +823,16 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
                   >
                     <div className="space-y-2">
                       <div className="flex items-start justify-between gap-2">
-                        <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex-1">{step.fonction}</h3>
+                        <div className="flex items-center gap-2 flex-1">
+                          <button
+                            onClick={() => handleToggleResolved(step)}
+                            className={`p-0.5 rounded transition-colors ${step.resolved ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-300 hover:text-slate-400'}`}
+                            title={step.resolved ? 'Marquer comme non résolu' : 'Marquer comme résolu'}
+                          >
+                            <CheckCircle2 className="h-4 w-4" />
+                          </button>
+                          <h3 className={`text-base font-bold flex-1 ${step.resolved ? 'line-through text-slate-400' : 'text-slate-900 dark:text-slate-100'}`}>{step.fonction}</h3>
+                        </div>
                         <span className={`rounded-lg px-2 py-0.5 text-[10px] font-bold ${
                           step.statut === 'OK' ? 'bg-emerald-100 text-emerald-700' :
                           step.statut === 'BUG' ? 'bg-rose-100 text-rose-700' :
@@ -844,15 +955,6 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
                       />
                     </div>
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase text-slate-500">Document</label>
-                    <input 
-                      type="text" 
-                      value={editingSession.nom_document || ''}
-                      onChange={(e) => setEditingSession({...editingSession, nom_document: e.target.value})}
-                      className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
-                    />
-                  </div>
                   <button type="submit" className="rounded-2xl bg-sky-600 px-6 py-2 font-bold text-white shadow-lg transition hover:bg-sky-700">
                     Enregistrer
                   </button>
@@ -878,12 +980,27 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
                   </button>
                 </div>
                 <div className="space-y-3 text-sm">
-                  <div><span className="font-semibold">Fonction :</span> {editingTest.fonction}</div>
+                  <div className={`flex items-center gap-2 ${editingTest.resolved ? 'line-through text-slate-400' : ''}`}>
+                    <CheckCircle2 className={`h-4 w-4 ${editingTest.resolved ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-300'}`} />
+                    <span><span className="font-semibold">Fonction :</span> {editingTest.fonction}</span>
+                  </div>
                   <div><span className="font-semibold">Précondition :</span> {editingTest.precondition}</div>
                   <div><span className="font-semibold">Étapes :</span> {editingTest.etapes}</div>
                   <div><span className="font-semibold">Résultat attendu :</span> {editingTest.resultatAttendu}</div>
                   <div><span className="font-semibold">Résultat obtenu :</span> {editingTest.resultatObtenu}</div>
                   <div><span className="font-semibold">Commentaires :</span> {editingTest.commentaires}</div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleResolved(editingTest)}
+                    className={`mt-2 flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-bold transition ${
+                      editingTest.resolved
+                        ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'
+                    }`}
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                    {editingTest.resolved ? 'Marquer comme non résolu' : 'Marquer comme résolu'}
+                  </button>
                 </div>
               </motion.div>
             </div>

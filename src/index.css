@@ -42,4 +42,13 @@ html.dark body {
   .shadow-soft {
     box-shadow: 0 28px 60px rgba(15, 23, 42, 0.08);
   }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }

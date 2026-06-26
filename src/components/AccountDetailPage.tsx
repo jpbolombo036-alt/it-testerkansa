@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { fetchAccountById, deleteAccount, Account } from '../api/accountApi';
 import { fetchApplications, Application } from '../api/applicationApi';
-import { Loader2, Edit3, Trash2, X, Key, Shield, User, Globe, MessageSquare } from 'lucide-react';
+import { Loader2, Edit3, Trash2, X, Key, Shield, User, Globe, MessageSquare, Copy, Check } from 'lucide-react';
 import { useToast } from '../components/ToastProvider';
 
 export const AccountDetailPage: React.FC = () => {
@@ -141,9 +141,18 @@ export const AccountDetailPage: React.FC = () => {
                 <Key className="h-4 w-4 text-emerald-600" />
                 <span className="text-xs font-bold uppercase text-slate-400">Code d'accès</span>
               </div>
-              <p className="text-sm font-mono font-bold text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-800/50 rounded-lg px-3 py-2 inline-block">
-                {account.code}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-mono font-bold text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-800/50 rounded-lg px-3 py-2 inline-block">
+                  {'•'.repeat(account.code.length)}
+                </p>
+                <button
+                  onClick={() => navigator.clipboard.writeText(account.code)}
+                  className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-emerald-600 dark:hover:bg-slate-800"
+                  title="Copier le code"
+                >
+                  <Copy className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -164,14 +173,6 @@ export const AccountDetailPage: React.FC = () => {
       </motion.div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
-        <button
-          onClick={handleDelete}
-          disabled={deleting}
-          className="flex items-center justify-center gap-2 rounded-2xl bg-rose-100 px-6 py-2.5 text-sm font-bold text-rose-700 hover:bg-rose-200 dark:bg-rose-900/30 dark:text-rose-300 disabled:opacity-50"
-        >
-          {deleting ? <Loader2 className="animate-spin" /> : <Trash2 className="h-4 w-4" />}
-          Supprimer
-        </button>
         <button
           onClick={() => navigate('/comptes')}
           className="sm:ml-auto rounded-2xl bg-slate-100 px-6 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"

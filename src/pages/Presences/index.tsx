@@ -137,7 +137,7 @@ export default function PresencesPage() {
         </motion.div>
         
         <div className="rounded-[2.5rem] bg-white p-12 shadow-soft dark:bg-slate-900 text-center">
-          <Calendar className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+          <Calendar className="h-16 w-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">Module en cours de déploiement</h2>
           <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">
             Le module de présences n'est pas encore disponible sur le serveur. 

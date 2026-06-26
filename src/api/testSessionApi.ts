@@ -10,6 +10,7 @@ export interface Test {
   resultatObtenu: string
   statut: string
   commentaires?: string
+  resolved?: boolean
 }
 
 export const SESSION_STATUS_OPEN = 'OPEN'
@@ -19,17 +20,18 @@ export interface TestSession {
    id: number
    nom: string
    description: string
+   role?: string
+   plateforme?: string
    applicationId?: number
    environnement: string
    version?: string
    statut?: string
-   nom_document?: string
    dateCreation: string
    createdBy?: number
    createdByUsername?: string
    createdByRole?: string
    tests?: Test[]
-  }
+ }
   
   export type TestSessionCreateData = Partial<TestSession>
 

@@ -121,7 +121,7 @@ export default function MessagesPage() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-2 md:px-3 pb-20 md:pb-6">
+        <div className="flex-1 overflow-y-auto hide-scrollbar px-2 md:px-3 pb-20 md:pb-6">
           {users.map((u) => {
             const unreadCount = unreadConversations.find(c => c.userId === u.id)?.count || 0
             return (
@@ -182,7 +182,7 @@ export default function MessagesPage() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-2 md:space-y-4">
+            <div className="flex-1 overflow-y-auto hide-scrollbar p-4 md:p-6 space-y-2 md:space-y-4">
               {isLoading && messages.length === 0 ? (
                 <div className="flex h-full items-center justify-center">
                   <Loader2 className="h-8 w-8 animate-spin text-sky-500" />

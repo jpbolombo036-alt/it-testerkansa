@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import api from '../api/axios'
-import { User, fetchMe } from '../api/userApi'
+import { User, fetchMe, updateProfile, changePassword } from '../api/userApi'
 export type { User } // Ré-export pour la compatibilité
 
 interface AuthContextType {
@@ -8,6 +8,9 @@ interface AuthContextType {
   isAuthenticated: boolean
   login: (username: string, password: string) => Promise<void>
   logout: () => void
+  refreshUser: () => Promise<void>
+  updateProfile: (data: { username?: string; email?: string }) => Promise<User>
+  changePassword: (data: { oldPassword: string; newPassword: string }) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -59,6 +62,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAuthenticated(true)
   }, [])
 
+  const refreshUser = useCallback(async () => {
+    const data = await fetchMe()
+    setUser(data)
+  }, [])
+
+  const updateUserProfile = useCallback(async (data: { username?: string; email?: string }) => {
+    const updated = await updateProfile(data)
+    setUser(updated)
+    return updated
+  }, [])
+
+  const updateUserPassword = useCallback(async (data: { oldPassword: string; newPassword: string }) => {
+    await changePassword(data)
+  }, [])
+
   const logout = useCallback(() => {
     localStorage.removeItem('token')
     setUser(null)
@@ -70,7 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, refreshUser, updateProfile: updateUserProfile, changePassword: updateUserPassword }}>
       {children}
     </AuthContext.Provider>
   )

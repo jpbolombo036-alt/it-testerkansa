@@ -12,6 +12,9 @@ export interface DashboardStats {
   testsRateOk: number
   testsRateBug: number
   testsRatePending: number
+  testsResolved: number
+  testsUnresolved: number
+  testsRateResolved: number
   activeAccounts: number
   recentSessions: number
   bugReports: number

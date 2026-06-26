@@ -17,7 +17,7 @@ export default function CompteCreatePage() {
     applicationId: 0,
     username: '',
     code: '',
-    role: 'USER',
+    role: '',
     commentaire: ''
   })
 
@@ -103,17 +103,16 @@ export default function CompteCreatePage() {
                 ))}
               </select>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase text-slate-500">Rôle</label>
-              <select
-                value={formData.role}
-                onChange={(e) => setFormData({...formData, role: e.target.value})}
-                className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-400 dark:bg-slate-950"
-              >
-                <option value="USER">Utilisateur</option>
-                <option value="ADMIN">Administrateur</option>
-              </select>
-            </div>
+<div className="space-y-1.5">
+               <label className="text-xs font-bold uppercase text-slate-500">Rôle</label>
+               <input
+                 type="text"
+                 value={formData.role}
+                 onChange={(e) => setFormData({...formData, role: e.target.value})}
+                 className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-400 dark:bg-slate-950"
+                 placeholder="Ex : Admin, client, etc."
+               />
+             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">

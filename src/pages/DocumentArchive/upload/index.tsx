@@ -286,7 +286,7 @@ export default function DocumentUploadPage() {
             )}
           </AnimatePresence>
 
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          <div className="flex flex-row flex-wrap gap-3 pt-2">
             <button
               type="submit"
               disabled={isSubmitting}

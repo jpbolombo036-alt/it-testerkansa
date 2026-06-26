@@ -162,8 +162,8 @@ export default function ComptesPage() {
         transition={{ duration: 0.3 }}
         className="rounded-[2rem] bg-white p-4 shadow-soft dark:bg-slate-900"
       >
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
+        <div className="flex flex-col gap-3">
+          <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
@@ -173,11 +173,11 @@ export default function ComptesPage() {
               className="w-full rounded-xl border-none bg-slate-50 py-2.5 pl-10 pr-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-400 dark:bg-slate-950"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <select
               value={filterApplicationId ?? ''}
               onChange={(e) => setFilterApplicationId(e.target.value ? Number(e.target.value) : null)}
-              className="rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-400 dark:bg-slate-950"
+              className="flex-1 min-w-[140px] rounded-xl border-none bg-slate-50 py-2.5 px-3 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-400 dark:bg-slate-950"
             >
               <option value="">Toutes les applications</option>
               {applications.map((app) => (
@@ -187,14 +187,14 @@ export default function ComptesPage() {
             <select
               value={sortField}
               onChange={(e) => setSortField(e.target.value as any)}
-              className="rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-400 dark:bg-slate-950"
+              className="flex-1 min-w-[140px] rounded-xl border-none bg-slate-50 py-2.5 px-3 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-400 dark:bg-slate-950"
             >
               <option value="username">Trier par utilisateur</option>
               <option value="role">Trier par rôle</option>
             </select>
             <button
               onClick={() => setSortDirection(dir => dir === 'asc' ? 'desc' : 'asc')}
-              className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold uppercase text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+              className="rounded-xl bg-slate-100 px-3 py-2.5 text-xs font-bold uppercase text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
               title={sortDirection === 'asc' ? 'Tri croissant' : 'Tri décroissant'}
             >
               {sortDirection === 'asc' ? '↑' : '↓'}
@@ -235,17 +235,16 @@ export default function ComptesPage() {
                     ))}
                   </select>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase text-slate-500">Rôle</label>
-                  <select
-                    value={formData.role}
-                    onChange={(e) => setFormData({...formData, role: e.target.value})}
-                    className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-400 dark:bg-slate-950"
-                  >
-                    <option value="USER">Utilisateur</option>
-                    <option value="ADMIN">Administrateur</option>
-                  </select>
-                </div>
+<div className="space-y-1.5">
+                   <label className="text-xs font-bold uppercase text-slate-500">Rôle</label>
+                   <input
+                     type="text"
+                     value={formData.role}
+                     onChange={(e) => setFormData({...formData, role: e.target.value})}
+                     className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-400 dark:bg-slate-950"
+                     placeholder="USER ou ADMIN"
+                   />
+                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
@@ -297,18 +296,19 @@ export default function ComptesPage() {
         </div>
       ) : (
         <>
-          {/* Desktop/Tablet Table View */}
-          <div className="hidden sm:block overflow-x-auto">
+{/* Desktop/Tablet Table View */}
+           <div className="hidden sm:block overflow-x-auto hide-scrollbar">
             <table className="w-full text-left border-separate border-spacing-y-4">
-              <thead>
-                <tr className="text-xs font-extrabold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
-                  <th className="px-6 py-3">Utilisateur</th>
-                  <th className="px-6 py-3">Application</th>
-                  <th className="px-6 py-3">Rôle</th>
-                  <th className="px-6 py-3">Statut</th>
-                  <th className="px-6 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
+<thead>
+                 <tr className="text-xs font-extrabold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
+                   <th className="px-6 py-3">Utilisateur</th>
+                   <th className="px-6 py-3">Application</th>
+                   <th className="px-6 py-3">Description</th>
+                   <th className="px-6 py-3">Rôle</th>
+                   <th className="px-6 py-3">Statut</th>
+                   <th className="px-6 py-3 text-right">Actions</th>
+                 </tr>
+               </thead>
               <tbody>
                 {filteredAccounts.map(account => (
                   <motion.tr 
@@ -330,9 +330,12 @@ export default function ComptesPage() {
                       </p>
                     </td>
                     <td className="bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-all shadow-sm group-hover:shadow-md">
-                      <span className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider ${
-                        account.role === 'ADMIN' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'
-                      }`}>
+                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 line-clamp-2 max-w-[200px]">
+                        {account.commentaire || '-'}
+                      </p>
+                    </td>
+                    <td className="bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-all shadow-sm group-hover:shadow-md">
+                      <span className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider ${account.role === 'ADMIN' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
                         {account.role}
                       </span>
                     </td>
@@ -403,12 +406,20 @@ export default function ComptesPage() {
                   </span>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-3 mb-4">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Application: <span className="font-bold text-slate-700 dark:text-slate-200">
-                      {applications.find(a => a.id === account.applicationId)?.nom || '-'}
-                    </span>
-                  </p>
-                </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Application: <span className="font-bold text-slate-700 dark:text-slate-200">
+                          {applications.find(a => a.id === account.applicationId)?.nom || '-'}
+                        </span>
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Code: <span className="font-mono font-bold text-slate-700 dark:text-slate-200">{'•'.repeat(account.code.length)}</span>
+                      </p>
+                      {account.commentaire && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">
+                          {account.commentaire}
+                        </p>
+                      )}
+                    </div>
                 <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                   <button onClick={() => handleView(account)} className="p-2 text-slate-400"><Eye className="h-5 w-5"/></button>
                   <button onClick={() => handleEdit(account)} className="p-2 text-slate-400"><Edit3 className="h-5 w-5"/></button>

@@ -284,8 +284,8 @@ export default function ApplicationLinksPage() {
         transition={{ duration: 0.3 }}
         className="rounded-[2rem] bg-white p-4 shadow-soft dark:bg-slate-900"
       >
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
+        <div className="flex flex-col gap-3">
+          <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
@@ -295,11 +295,11 @@ export default function ApplicationLinksPage() {
               className="w-full rounded-xl border-none bg-slate-50 py-2.5 pl-10 pr-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <select
               value={filterApplicationId ?? ''}
               onChange={(e) => setFilterApplicationId(e.target.value ? Number(e.target.value) : null)}
-              className="rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
+              className="flex-1 min-w-[140px] rounded-xl border-none bg-slate-50 py-2.5 px-3 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
             >
               <option value="">Toutes les applications</option>
               {applications.map((app) => (
@@ -309,7 +309,7 @@ export default function ApplicationLinksPage() {
             <select
               value={sortField}
               onChange={(e) => setSortField(e.target.value as any)}
-              className="rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
+              className="flex-1 min-w-[140px] rounded-xl border-none bg-slate-50 py-2.5 px-3 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
             >
               <option value="nom">Trier par nom</option>
               <option value="type">Trier par type</option>
@@ -318,7 +318,7 @@ export default function ApplicationLinksPage() {
             </select>
             <button
               onClick={() => setSortDirection(dir => dir === 'asc' ? 'desc' : 'asc')}
-              className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold uppercase text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+              className="rounded-xl bg-slate-100 px-3 py-2.5 text-xs font-bold uppercase text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
               title={sortDirection === 'asc' ? 'Tri croissant' : 'Tri décroissant'}
             >
               {sortDirection === 'asc' ? '↑' : '↓'}

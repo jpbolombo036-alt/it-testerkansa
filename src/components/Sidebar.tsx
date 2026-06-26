@@ -15,8 +15,9 @@ import {
   Clock,
   FolderOpen,
 } from 'lucide-react'
+import { useAuth } from '../hooks/useAuth'
 
-export const menuItems = [
+const baseMenuItems = [
   { label: 'Tableau de bord', to: '/', icon: LayoutDashboard },
   { label: 'Applications', to: '/applications', icon: Layers },
   { label: 'Liens Web', to: '/application-links', icon: Link },
@@ -32,7 +33,14 @@ export const menuItems = [
   { label: 'Mon Profil', to: '/profil', icon: UserCircle },
 ]
 
+export const menuItems = baseMenuItems.filter((_item, _index) => true)
+export { baseMenuItems }
+
 export default function Sidebar() {
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'ADMIN'
+  
+  const visibleMenuItems = baseMenuItems.filter(item => !item.adminOnly || isAdmin)
   return (
     <aside className="fixed left-0 top-0 z-20 hidden h-screen w-72 flex-col border-r border-slate-200 bg-white/95 px-6 py-8 shadow-soft backdrop-blur-xl transition-colors duration-300 dark:border-slate-800 dark:bg-slate-950/95 md:flex">
       <motion.div
@@ -50,8 +58,8 @@ export default function Sidebar() {
         </div>
       </motion.div>
 
-      <nav className="flex-1 space-y-2 overflow-y-auto -mx-2 px-2">
-        {menuItems.map((item) => {
+      <nav className="flex-1 space-y-2 overflow-y-auto hide-scrollbar -mx-2 px-2">
+        {visibleMenuItems.map((item) => {
           const Icon = item.icon
           return (
             <NavLink

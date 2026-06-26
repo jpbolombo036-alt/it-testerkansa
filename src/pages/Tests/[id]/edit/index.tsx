@@ -19,7 +19,8 @@ export default function TestSessionEditPage() {
     description: '',
     environnement: 'PRODUCTION' as string,
     version: '',
-    nom_document: '',
+    role: '',
+    plateforme: 'Web' as 'Web' | 'Mobile',
     applicationId: undefined as number | undefined
   })
 
@@ -37,7 +38,8 @@ export default function TestSessionEditPage() {
           description: session.description || '',
           environnement: session.environnement || 'PRODUCTION',
           version: session.version || '',
-          nom_document: session.nom_document || '',
+          role: session.role || '',
+          plateforme: session.plateforme || 'Web',
           applicationId: session.applicationId
         })
         setApplications(apps)
@@ -50,6 +52,19 @@ export default function TestSessionEditPage() {
     }
     loadData()
   }, [id])
+
+  const handleApplicationChange = (appId: number | undefined) => {
+    if (!appId) {
+      setFormData({...formData, applicationId: undefined})
+      return
+    }
+    const selectedApp = applications.find(a => a.id === appId)
+    setFormData({
+      ...formData,
+      applicationId: appId,
+      version: selectedApp?.version || ''
+    })
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -123,8 +138,29 @@ export default function TestSessionEditPage() {
                 className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-400 dark:bg-slate-950"
               >
                 <option value="DEVELOPPEMENT">Développement</option>
-                <option value="STAGING">Staging</option>
+                <option value="STAGING">Test</option>
                 <option value="PRODUCTION">Production</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase text-slate-500">Rôle</label>
+              <input
+                type="text"
+                value={formData.role}
+                onChange={(e) => setFormData({...formData, role: e.target.value})}
+                placeholder="Ex: Testeur, Responsable QA..."
+                className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-400 dark:bg-slate-950"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase text-slate-500">Plateforme</label>
+              <select
+                value={formData.plateforme}
+                onChange={(e) => setFormData({...formData, plateforme: e.target.value as 'Web' | 'Mobile'})}
+                className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-400 dark:bg-slate-950"
+              >
+                <option value="Web">Web</option>
+                <option value="Mobile">Mobile</option>
               </select>
             </div>
           </div>
@@ -144,7 +180,7 @@ export default function TestSessionEditPage() {
               <label className="text-xs font-bold uppercase text-slate-500">Application</label>
               <select
                 value={formData.applicationId ?? ''}
-                onChange={(e) => setFormData({...formData, applicationId: e.target.value ? Number(e.target.value) : undefined})}
+                onChange={(e) => handleApplicationChange(e.target.value ? Number(e.target.value) : undefined)}
                 className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-400 dark:bg-slate-950"
               >
                 <option value="">Aucune</option>
@@ -163,17 +199,6 @@ export default function TestSessionEditPage() {
                 className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-400 dark:bg-slate-950"
               />
             </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase text-slate-500">Nom du document</label>
-            <input
-              type="text"
-              value={formData.nom_document}
-              onChange={(e) => setFormData({...formData, nom_document: e.target.value})}
-              placeholder="Nom du document associé"
-              className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-400 dark:bg-slate-950"
-            />
           </div>
 
           <div className="flex gap-3 pt-2">

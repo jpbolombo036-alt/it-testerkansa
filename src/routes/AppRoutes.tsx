@@ -1,6 +1,8 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import ProtectedRoute from '../components/ProtectedRoute'
+import AdminRoute from '../components/AdminRoute'
+import FeatureRoute from '../components/FeatureRoute'
 import Dashboard from '../pages/Dashboard'
 import Login from '../pages/Login'
 import UsersAdminPage from '../pages/Users'
@@ -71,12 +73,13 @@ const AppRoutes: React.FC = () => {
           <Route path="/bloc-notes/:id" element={<BlocNotesPageWrapper />} />
           <Route path="/bloc-notes/:id/edit" element={<BlocNotesPageWrapper />} />
           <Route path="/messages" element={<MessagesPage />} />
-          <Route path="/document-archive" element={<DocumentArchivePage />} />
+          
+          <Route path="/document-archive" element={<FeatureRoute feature="documentArchiveEnabled"><DocumentArchivePage /></FeatureRoute>} />
           <Route path="/document-archive/upload" element={<DocumentUploadPage />} />
           <Route path="/document-archive/:id" element={<DocumentDetailPage />} />
           <Route path="/document-archive/:id/preview" element={<DocumentPreviewPage />} />
           <Route path="/rapports" element={<RapportsPage />} />
-          <Route path="/presences" element={<PresencesPage />} />
+          <Route path="/presences" element={<FeatureRoute feature="presencesEnabled"><PresencesPage /></FeatureRoute>} />
           <Route path="/profil" element={<ProfilPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
         </Route>

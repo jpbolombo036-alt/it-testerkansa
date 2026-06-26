@@ -22,43 +22,53 @@ export const exportToPDF = (session: TestSession) => {
     </head>
     <body>
       <div class="header">
-        <h1>${session.nom}</h1>
+        <h1 style="text-align: center;">${session.nom}</h1>
         <p><strong>Description:</strong> ${session.description || '-'}</p>
         <p><strong>Créé par:</strong> ${session.createdByUsername} (${session.createdByRole})</p>
+        <p><strong>Rôle:</strong> ${session.role || '-'}</p>
         <p><strong>Environnement:</strong> ${session.environnement}</p>
         <p><strong>Version:</strong> ${session.version || '-'}</p>
+        <p><strong>Date de création:</strong> ${new Date(session.dateCreation).toLocaleDateString('fr-FR')}</p>
         <p><strong>Nombre de tests:</strong> ${session.tests?.length || 0}</p>
       </div>
       
       <h2>Tests</h2>
-      ${session.tests && session.tests.length > 0 ? `
-      <table>
-        <thead>
-          <tr>
-            <th>Fonction</th>
-            <th>Précondition</th>
-            <th>Étapes</th>
-            <th>Résultat attendu</th>
-            <th>Résultat obtenu</th>
-            <th>Statut</th>
-            <th>Commentaires</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${session.tests.map(test => `
-          <tr>
-            <td>${test.fonction}</td>
-            <td>${test.precondition || '-'}</td>
-            <td>${test.etapes}</td>
-            <td>${test.resultatAttendu}</td>
-            <td>${test.resultatObtenu || '-'}</td>
-            <td>${test.statut}</td>
-            <td>${test.commentaires || '-'}</td>
-          </tr>
+      ${(() => {
+        const allTests = session.tests || []
+        const unresolved = allTests.filter(t => !t.resolved)
+        const resolved = allTests.filter(t => t.resolved)
+        if (allTests.length === 0) return '<p>Aucun test pour cette session</p>'
+        if (unresolved.length === 0) return '<p>Tous les tests sont résolus.</p>'
+        return `
+        <table>
+          <thead>
+            <tr>
+              <th>Fonction</th>
+              <th>Précondition</th>
+              <th>Étapes</th>
+              <th>Résultat attendu</th>
+              <th>Résultat obtenu</th>
+              <th>Statut</th>
+              <th>Commentaires</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${unresolved.map(test => `
+            <tr>
+              <td>${test.fonction}</td>
+              <td>${test.precondition || '-'}</td>
+              <td>${test.etapes}</td>
+              <td>${test.resultatAttendu}</td>
+              <td>${test.resultatObtenu || '-'}</td>
+              <td>${test.statut}</td>
+              <td>${test.commentaires || '-'}</td>
+            </tr>
           `).join('')}
-        </tbody>
-      </table>
-      ` : '<p>Aucun test pour cette session</p>'}
+          </tbody>
+        </table>
+        ${resolved.length > 0 ? `<p style="margin-top:12px; font-size:10px; color:#888;">Tests résolus (${resolved.length}) : ${resolved.map(t => t.fonction).join(', ')}</p>` : ''}
+        `
+      })()}
       
       <script>window.onload = () => { window.print(); }</script>
     </body>
@@ -70,29 +80,64 @@ export const exportToPDF = (session: TestSession) => {
 }
 
 export const exportToWord = (session: TestSession) => {
+  const unresolved = (session.tests || []).filter(t => !t.resolved)
+  const resolved = (session.tests || []).filter(t => t.resolved)
+  const testsTable = unresolved.length > 0 ? `
+  <table>
+    <thead>
+      <tr>
+        <th>Fonction</th>
+        <th>Précondition</th>
+        <th>Étapes</th>
+        <th>Résultat attendu</th>
+        <th>Résultat obtenu</th>
+        <th>Statut</th>
+        <th>Commentaires</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${unresolved.map(test => `
+      <tr>
+        <td>${test.fonction}</td>
+        <td>${test.precondition || '-'}</td>
+        <td>${test.etapes}</td>
+        <td>${test.resultatAttendu}</td>
+        <td>${test.resultatObtenu || '-'}</td>
+        <td>${test.statut}</td>
+        <td>${test.commentaires || '-'}</td>
+      </tr>
+      `).join('')}
+    </tbody>
+  </table>` : '<p>Aucun test non résolu pour cette session</p>'
+
   const content = `
-Session de Test: ${session.nom}
-================================
-
-Description: ${session.description || '-'}
-Créé par: ${session.createdByUsername} (${session.createdByRole})
-Environnement: ${session.environnement}
-Version: ${session.version || '-'}
-Nombre de tests: ${session.tests?.length || 0}
-
-Tests
------
-${session.tests && session.tests.length > 0 ? 
-  session.tests.map((test, i) => `
-${i + 1}. ${test.fonction}
-   Précondition: ${test.precondition || '-'}
-   Étapes: ${test.etapes}
-   Résultat attendu: ${test.resultatAttendu}
-   Résultat obtenu: ${test.resultatObtenu || '-'}
-   Statut: ${test.statut}
-   Commentaires: ${test.commentaires || '-'}
-`).join('') : 'Aucun test pour cette session'}
-`
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: Arial, sans-serif; }
+    h1 { color: #009966; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #999; padding: 6px; text-align: left; font-size: 11px; }
+    th { background-color: #F5F6F8; font-weight: bold; }
+    p { margin: 4px 0; }
+  </style>
+</head>
+<body>
+  <h1 style="text-align: center;">${session.nom}</h1>
+  <p><strong>Description:</strong> ${session.description || '-'}</p>
+  <p><strong>Créé par:</strong> ${session.createdByUsername} (${session.createdByRole})</p>
+  <p><strong>Rôle:</strong> ${session.role || '-'}</p>
+  <p><strong>Environnement:</strong> ${session.environnement}</p>
+  <p><strong>Version:</strong> ${session.version || '-'}</p>
+  <p><strong>Date de création:</strong> ${new Date(session.dateCreation).toLocaleDateString('fr-FR')}</p>
+  <p><strong>Nombre de tests:</strong> ${session.tests?.length || 0} (${unresolved.length} non résolu${unresolved.length !== 1 ? 's' : ''})</p>
+  <h2>Tests</h2>
+  ${testsTable}
+  ${resolved.length > 0 ? `<p style="margin-top:10px; font-size:10px; color:#888;">Tests résolus (${resolved.length}) : ${resolved.map(t => t.fonction).join(', ')}</p>` : ''}
+</body>
+</html>
+  `
 
   const blob = new Blob([content], { type: 'application/msword' })
   const url = URL.createObjectURL(blob)
@@ -103,7 +148,7 @@ ${i + 1}. ${test.fonction}
   a.click()
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
- }
+}
 
 export const exportTodosToPDF = (todos: Todo[], username?: string) => {
   const printWindow = window.open('', '_blank')

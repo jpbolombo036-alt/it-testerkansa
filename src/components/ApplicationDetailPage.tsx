@@ -5,7 +5,7 @@ import { fetchApplicationById, deleteApplication, Application } from '../api/app
 import { fetchApplicationLinksByApplication } from '../api/applicationLinkApi';
 import { fetchAccounts, Account } from '../api/accountApi';
 import { ApplicationLink } from '../types/applicationLinkTypes';
-import { Loader2, Edit3, Trash2, X, Package, Globe, User as UserIcon, ExternalLink, Calendar } from 'lucide-react';
+import { Loader2, Edit3, Trash2, X, Package, Globe, User as UserIcon, ExternalLink, Calendar, Eye } from 'lucide-react';
 import { useToast } from '../components/ToastProvider';
 
 export const ApplicationDetailPage: React.FC = () => {
@@ -215,24 +215,36 @@ export const ApplicationDetailPage: React.FC = () => {
         </div>
 
         {accounts.length > 0 ? (
-          <div className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-slate-50 dark:bg-slate-800/50">
-                  <th className="px-6 py-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Identifiant</th>
-                  <th className="px-6 py-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Rôle</th>
-                  <th className="px-6 py-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Code</th>
-                </tr>
-              </thead>
-              <tbody>
-                {accounts.map(acc => (
-                  <tr key={acc.id} className="border-t border-slate-50 dark:border-slate-800/50">
-                    <td className="px-6 py-3 text-sm font-bold text-slate-800 dark:text-slate-200">{acc.username}</td>
-                    <td className="px-6 py-3 text-sm text-slate-600 dark:text-slate-300">{acc.role}</td>
-                    <td className="px-6 py-3 text-sm font-mono text-slate-500">{acc.code}</td>
-                  </tr>
-                ))}
-              </tbody>
+          <div className="rounded-2xl overflow-x-auto border border-slate-100 dark:border-slate-800">
+            <table className="w-full text-left min-w-[640px]">
+<thead>
+                 <tr className="bg-slate-50 dark:bg-slate-800/50">
+                   <th className="px-6 py-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Identifiant</th>
+                   <th className="px-6 py-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Description</th>
+                   <th className="px-6 py-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Rôle</th>
+                   <th className="px-6 py-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Code</th>
+                   <th className="px-6 py-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-500 text-right">Actions</th>
+                 </tr>
+               </thead>
+<tbody>
+                 {accounts.map(acc => (
+                   <tr key={acc.id} className="border-t border-slate-50 dark:border-slate-800/50">
+                     <td className="px-6 py-3 text-sm font-bold text-slate-800 dark:text-slate-200">{acc.username}</td>
+                     <td className="px-6 py-3 text-sm text-slate-600 dark:text-slate-300 max-w-[200px] truncate">{acc.commentaire || '-'}</td>
+                     <td className="px-6 py-3 text-sm text-slate-600 dark:text-slate-300">{acc.role}</td>
+                     <td className="px-6 py-3 text-sm font-mono text-slate-500">{'•'.repeat(acc.code.length)}</td>
+                     <td className="px-6 py-3 text-right">
+                       <button
+                         onClick={() => navigate(`/comptes/${acc.id}`)}
+                         className="p-2 rounded-lg text-slate-400 hover:bg-sky-50 hover:text-sky-600 dark:hover:bg-sky-900/30"
+                         title="Voir le compte"
+                       >
+                         <Eye className="h-4 w-4" />
+                       </button>
+                     </td>
+                   </tr>
+                 ))}
+               </tbody>
             </table>
           </div>
         ) : (
@@ -243,14 +255,6 @@ export const ApplicationDetailPage: React.FC = () => {
       </motion.div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
-        <button
-          onClick={handleDelete}
-          disabled={deleting}
-          className="flex items-center justify-center gap-2 rounded-2xl bg-rose-100 px-6 py-2.5 text-sm font-bold text-rose-700 hover:bg-rose-200 dark:bg-rose-900/30 dark:text-rose-300 disabled:opacity-50"
-        >
-          {deleting ? <Loader2 className="animate-spin" /> : <Trash2 className="h-4 w-4" />}
-          Supprimer
-        </button>
         <button
           onClick={() => navigate('/applications')}
           className="sm:ml-auto rounded-2xl bg-slate-100 px-6 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
