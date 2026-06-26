@@ -9,7 +9,7 @@ export default function MobileMenu() {
   const [open, setOpen] = useState(false)
   const { user } = useAuth()
   const isAdmin = user?.role === 'ADMIN'
-  const visibleMenuItems = baseMenuItems.filter(item => !item.adminOnly || isAdmin)
+  const visibleMenuItems = baseMenuItems
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

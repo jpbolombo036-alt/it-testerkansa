@@ -39,7 +39,7 @@ export default function TestSessionEditPage() {
           environnement: session.environnement || 'PRODUCTION',
           version: session.version || '',
           role: session.role || '',
-          plateforme: session.plateforme || 'Web',
+          plateforme: (session.plateforme as 'Web' | 'Mobile') || 'Web',
           applicationId: session.applicationId
         })
         setApplications(apps)

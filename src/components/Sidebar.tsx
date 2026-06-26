@@ -38,9 +38,9 @@ export { baseMenuItems }
 
 export default function Sidebar() {
   const { user } = useAuth()
-  const isAdmin = user?.role === 'ADMIN'
-  
-  const visibleMenuItems = baseMenuItems.filter(item => !item.adminOnly || isAdmin)
+   const isAdmin = user?.role === 'ADMIN'
+   
+   const visibleMenuItems = baseMenuItems
   return (
     <aside className="fixed left-0 top-0 z-20 hidden h-screen w-72 flex-col border-r border-slate-200 bg-white/95 px-6 py-8 shadow-soft backdrop-blur-xl transition-colors duration-300 dark:border-slate-800 dark:bg-slate-950/95 md:flex">
       <motion.div
