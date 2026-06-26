@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { fetchAccountById, deleteAccount, Account } from '../api/accountApi';
 import { fetchApplications, Application } from '../api/applicationApi';
-import { Loader2, Edit3, Trash2, X, Key, Shield, User, Globe, MessageSquare, Copy, Check } from 'lucide-react';
+import { Loader2, Edit3, Trash2, X, Key, Shield, User, Globe, MessageSquare, Copy, Check, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '../components/ToastProvider';
 
 export const AccountDetailPage: React.FC = () => {
@@ -15,6 +15,7 @@ export const AccountDetailPage: React.FC = () => {
   const [application, setApplication] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [showCode, setShowCode] = useState(false);
 
   useEffect(() => {
     const loadDetail = async () => {
@@ -143,8 +144,15 @@ export const AccountDetailPage: React.FC = () => {
               </div>
               <div className="flex items-center gap-2">
                 <p className="text-sm font-mono font-bold text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-800/50 rounded-lg px-3 py-2 inline-block">
-                  {'•'.repeat(account.code.length)}
+                  {showCode ? account.code : '•'.repeat(account.code.length)}
                 </p>
+                <button
+                  onClick={() => setShowCode(!showCode)}
+                  className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-sky-600 dark:hover:bg-slate-800"
+                  title={showCode ? 'Masquer le code' : 'Visualiser le code'}
+                >
+                  {showCode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
                 <button
                   onClick={() => navigator.clipboard.writeText(account.code)}
                   className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-emerald-600 dark:hover:bg-slate-800"

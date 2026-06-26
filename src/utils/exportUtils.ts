@@ -151,6 +151,7 @@ export const exportToWord = (session: TestSession) => {
 }
 
 export const exportTodosToPDF = (todos: Todo[], username?: string) => {
+  const enCoursTodos = todos.filter(todo => !todo.completed)
   const printWindow = window.open('', '_blank')
   if (!printWindow) return
 
@@ -169,7 +170,7 @@ export const exportTodosToPDF = (todos: Todo[], username?: string) => {
     </head>
     <body>
       <h1>Tâches ${username ? `de ${username}` : ''}</h1>
-      ${todos.length > 0 ? `
+      ${enCoursTodos.length > 0 ? `
       <table>
         <thead>
           <tr>
@@ -182,19 +183,19 @@ export const exportTodosToPDF = (todos: Todo[], username?: string) => {
           </tr>
         </thead>
         <tbody>
-          ${todos.map(todo => `
+          ${enCoursTodos.map(todo => `
           <tr>
             <td>${todo.title}</td>
             <td>${todo.description || '-'}</td>
             <td>${todo.priority}</td>
             <td>${new Date(todo.dueDate).toLocaleDateString()}</td>
-            <td>${todo.completed ? 'Terminé' : 'En cours'}</td>
+            <td>En cours</td>
             <td>${todo.createdByUsername || '-'}</td>
           </tr>
           `).join('')}
         </tbody>
       </table>
-      ` : '<p>Aucune tâche à exporter</p>'}
+      ` : '<p>Aucune tâche en cours à exporter</p>'}
       
       <script>window.onload = () => { window.print(); }</script>
     </body>
@@ -206,19 +207,20 @@ export const exportTodosToPDF = (todos: Todo[], username?: string) => {
 }
 
 export const exportTodosToWord = (todos: Todo[], username?: string) => {
+  const enCoursTodos = todos.filter(todo => !todo.completed)
   const content = `
 Tâches ${username ? `de ${username}` : ''}
-================================
+===============================
 
-${todos.length > 0 ? 
-  todos.map((todo, i) => `
+${enCoursTodos.length > 0 ? 
+  enCoursTodos.map((todo, i) => `
 ${i + 1}. ${todo.title}
    Description: ${todo.description || '-'}
    Priorité: ${todo.priority}
    Échéance: ${new Date(todo.dueDate).toLocaleDateString()}
-   Statut: ${todo.completed ? 'Terminé' : 'En cours'}
+   Statut: En cours
    Créateur: ${todo.createdByUsername || '-'}
-`).join('') : 'Aucune tâche à exporter'}
+`).join('') : 'Aucune tâche en cours à exporter'}
 `
 
   const blob = new Blob([content], { type: 'application/msword' })
