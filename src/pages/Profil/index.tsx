@@ -26,7 +26,7 @@ export default function ProfilPage() {
   if (!user) return null
 
   const initials = (user.username || 'User').slice(0, 2).toUpperCase()
-  const roleLabel = user.role === 'ADMIN' ? 'Super administrateur' : 'Utilisateur'
+  const roleLabel = user.role === 'admin' ? 'Super administrateur' : 'Utilisateur'
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -126,7 +126,7 @@ export default function ProfilPage() {
               </div>
             </div>
             <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-              user.role === 'ADMIN'
+               user.role === 'admin'
                 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'
                 : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
             }`}>

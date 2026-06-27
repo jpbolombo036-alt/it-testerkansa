@@ -168,7 +168,7 @@ export default function RapportsPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-separate border-spacing-y-2">
+                <table className="w-full text-left border-separate border-spacing-y-2 border border-slate-200 dark:border-slate-700">
                   <thead>
                     <tr className="text-xs font-bold uppercase tracking-wider text-slate-400">
                       <th className="px-3 pb-2">Nom</th>

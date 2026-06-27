@@ -1,5 +1,4 @@
-import { Bell } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { Bell, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { fetchUnreadCount } from '../api/systemNotificationApi'
@@ -7,7 +6,12 @@ import { fetchUnreadCount } from '../api/systemNotificationApi'
 import UserDropdown from './UserDropdown'
 import MobileMenu from './MobileMenu'
 
-export default function Header() {
+interface HeaderProps {
+  sidebarCollapsed?: boolean
+  onToggleSidebar?: () => void
+}
+
+export default function Header({ sidebarCollapsed = false, onToggleSidebar }: HeaderProps) {
   const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
@@ -17,11 +21,20 @@ export default function Header() {
   }, [])
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-200 bg-white/95 px-4 py-4 shadow-sm backdrop-blur-xl transition-colors duration-300 dark:border-slate-800 dark:bg-slate-950/95 md:px-6 lg:px-8 md:ml-72">
+      <header className={`fixed top-0 left-0 right-0 z-50 border-b-2 border-slate-200 bg-white px-4 py-4 shadow-md transition-colors duration-300 dark:border-slate-800 dark:bg-slate-950 md:px-6 lg:px-8 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-72'}`}>
       <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Administration</p>
-          <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">Gestion des Accès IT</h1>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onToggleSidebar}
+            className="hidden md:flex items-center justify-center rounded-2xl p-2 text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+            title={sidebarCollapsed ? 'Ouvrir le menu' : 'Réduire le menu'}
+          >
+            {sidebarCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+          </button>
+          <div>
+            <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Administration</p>
+            <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">Gestion des Accès IT</h1>
+          </div>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">

@@ -65,7 +65,7 @@ export default function HeroBanner() {
           <div className="absolute bottom-4 left-4 rounded-3xl bg-white/15 px-3 py-2 text-xs text-slate-100 shadow-inner sm:bottom-6 sm:left-6 sm:px-4 sm:py-3 sm:text-sm">
             <p className="text-[10px] uppercase tracking-[0.22em] text-slate-200/80 sm:text-xs">Statut</p>
             <p className="mt-1 text-xs font-medium sm:mt-1 sm:text-sm">
-              {user?.role === 'ADMIN' ? 'Super administrateur' : 'Utilisateur'}
+               {user?.role === 'admin' ? 'Super administrateur' : 'Utilisateur'}
             </p>
           </div>
         </motion.div>

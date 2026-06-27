@@ -1,5 +1,4 @@
 import { NavLink } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import {
   CheckSquare,
   CreditCard,
@@ -14,8 +13,9 @@ import {
   Link,
   Clock,
   FolderOpen,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react'
-import { useAuth } from '../hooks/useAuth'
 
 const baseMenuItems = [
   { label: 'Tableau de bord', to: '/', icon: LayoutDashboard },
@@ -33,63 +33,59 @@ const baseMenuItems = [
   { label: 'Mon Profil', to: '/profil', icon: UserCircle },
 ]
 
-export const menuItems = baseMenuItems.filter((_item, _index) => true)
+interface SidebarProps {
+  collapsed?: boolean
+  onToggle?: () => void
+}
+
 export { baseMenuItems }
 
-export default function Sidebar() {
-  const { user } = useAuth()
-   const isAdmin = user?.role === 'ADMIN'
-   
-   const visibleMenuItems = baseMenuItems
+export default function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
+  const visibleMenuItems = baseMenuItems
+
   return (
-    <aside className="fixed left-0 top-0 z-20 hidden h-screen w-72 flex-col border-r border-slate-200 bg-white/95 px-6 py-8 shadow-soft backdrop-blur-xl transition-colors duration-300 dark:border-slate-800 dark:bg-slate-950/95 md:flex">
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="mb-10 flex items-center gap-3 rounded-[2.5rem] bg-white p-4 shadow-soft transition-colors duration-300 dark:bg-slate-900"
-      >
-        <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">
-          <ShieldCheck className="h-6 w-6" />
+    <aside className={`fixed left-0 top-0 z-20 hidden h-screen flex-col border-r-2 border-slate-200 bg-white backdrop-blur-xl transition-colors duration-300 dark:border-slate-800 dark:bg-slate-950 md:flex ${collapsed ? 'w-16' : 'w-72'}`}>
+      <div className="flex flex-col h-full" style={{ paddingTop: '17px' }}>
+        <div className={`flex items-center gap-3 px-4 py-4 border-b-2 border-slate-200 bg-white shadow-md transition-colors duration-300 dark:border-slate-800 dark:bg-slate-950 ${collapsed ? 'justify-center' : ''}`}>
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">
+            <ShieldCheck className="h-5 w-5" />
+          </div>
+          {!collapsed && (
+            <div>
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-100">IT Access Manager</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Gestion des accès</p>
+            </div>
+          )}
         </div>
-        <div>
-          <p className="text-sm font-semibold text-slate-700 dark:text-slate-100">IT Access Manager</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">Gestion des accès</p>
-        </div>
-      </motion.div>
 
-      <nav className="flex-1 space-y-2 overflow-y-auto hide-scrollbar -mx-2 px-2">
-        {visibleMenuItems.map((item) => {
-          const Icon = item.icon
-          return (
-            <NavLink
-              key={item.label}
-              to={item.to}
-              className={({ isActive }) =>
-                `group flex items-center gap-4 rounded-3xl px-4 py-3 transition-colors duration-300 ${
-                  isActive
-                    ? 'bg-sky-100 text-sky-700 shadow-soft dark:bg-sky-500/20 dark:text-sky-300'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100'
-                }`
-              }
-            >
-              <motion.span
-                whileHover={{ x: 6 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 18 }}
-                className="flex items-center gap-4 w-full"
+        <nav className="flex-1 space-y-1 overflow-y-auto hide-scrollbar px-3 py-2">
+          {visibleMenuItems.map((item) => {
+            const Icon = item.icon
+            return (
+              <NavLink
+                key={item.label}
+                to={item.to}
+                className={({ isActive }) =>
+                  `group flex items-center gap-3 rounded-2xl px-3 py-2.5 transition-colors duration-300 ${collapsed ? 'justify-center' : ''} ${
+                    isActive
+                      ? 'bg-sky-100 text-sky-700 shadow-soft dark:bg-sky-500/20 dark:text-sky-300'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100'
+                  }`
+                }
               >
-                <Icon className="h-5 w-5" />
-                <span className="text-sm font-medium">{item.label}</span>
-              </motion.span>
-            </NavLink>
-          )
-        })}
-      </nav>
+                <Icon className="h-5 w-5 flex-shrink-0" />
+                {!collapsed && <span className="text-sm font-medium truncate">{item.label}</span>}
+              </NavLink>
+            )
+          })}
+        </nav>
 
-      <div className="mt-auto rounded-[1.5rem] bg-slate-50 p-3 text-xs text-slate-600 shadow-sm transition-colors duration-300 dark:bg-slate-900 dark:text-slate-300">
-        <p className="font-semibold text-slate-900 dark:text-slate-100 mb-1">Conseils rapides</p>
-        <p className="leading-5">Utilisez le menu pour parcourir vos applications, comptes et rapports de sécurité.</p>
+        <div className="mt-auto px-3 pb-3">
+          {!collapsed && (
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-900 text-xs font-semibold text-white dark:bg-slate-100 dark:text-slate-900">AD</div>
+          )}
+        </div>
       </div>
     </aside>
-  )
-}
+    )
+  }

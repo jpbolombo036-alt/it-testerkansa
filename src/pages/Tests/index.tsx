@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { fetchTestSessions, createTestSession, deleteTestSession, updateTestSession, exportTestSession, SESSION_STATUS_OPEN, SESSION_STATUS_CLOSED, requestCloseSession, TestSession, TestSessionCreateData } from '../../api/testSessionApi'
+import { fetchTestSessions, createTestSession, deleteTestSession, updateTestSession, exportTestSession, SESSION_STATUS_OPEN, SESSION_STATUS_CLOSED, requestCloseSession, reopenSession, TestSession, TestSessionCreateData } from '../../api/testSessionApi'
 import { fetchTestSteps, updateTest, reportBug, createTest, deleteTest, toggleTestResolved, TestStep, Bug } from '../../api/testApi'
 import { fetchUsers, User } from '../../api/userApi'
 import { CheckCircle, XCircle, Bug as BugIcon, Loader2, ClipboardCheck, Plus, Calendar, X, Lock, Unlock, Eye, FileText, Edit3, Download, Trash2, Search, User as UserIcon, CheckCircle2 } from 'lucide-react'
@@ -99,11 +99,8 @@ const handleDeleteTest = async (testId: number) => {
     }
 
     const handleReopenSession = async (sessionId: number) => {
-      const session = sessions.find(s => s.id === sessionId)
-      if (!session) return
-
       try {
-        const updatedSession = await updateTestSession(sessionId, { ...session, statut: SESSION_STATUS_OPEN })
+        const updatedSession = await reopenSession(sessionId)
         setSessions(currentSessions => currentSessions.map(s => s.id === sessionId ? updatedSession : s))
         showToast('success', 'Session rouverte', 'La session a été rouverte avec succès.')
       } catch {
@@ -382,7 +379,7 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
 
     const currentSession = selectedSessionId === null ? null : sessions.find(session => session.id === selectedSessionId)
     const currentSessionStatus = currentSession ? getSessionStatus(currentSession) : SESSION_STATUS_OPEN
-    const isAdmin = user?.role === 'ADMIN'
+    const isAdmin = user?.role === 'admin'
 
     return (
 <div className="space-y-8 p-6">
@@ -513,8 +510,8 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
           transition={{ duration: 0.3 }}
           className="rounded-[2rem] bg-white p-4 shadow-soft dark:bg-slate-900"
         >
-          <div className="flex flex-col gap-3">
-            <div className="relative">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input
                 type="text"
@@ -524,34 +521,32 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
                 className="w-full rounded-xl border-none bg-slate-50 py-2.5 pl-10 pr-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
               />
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <select
-                value={sortField}
-                onChange={(e) => setSortField(e.target.value as any)}
-                className="flex-1 min-w-[140px] rounded-xl border-none bg-slate-50 py-2.5 px-3 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
-              >
-                <option value="nom">Trier par nom</option>
-                <option value="dateCreation">Trier par date</option>
-                <option value="createdByUsername">Trier par créateur</option>
-              </select>
-              <select
-                value={filterCreatorId ?? ''}
-                onChange={(e) => setFilterCreatorId(e.target.value ? Number(e.target.value) : null)}
-                className="flex-1 min-w-[140px] rounded-xl border-none bg-slate-50 py-2.5 px-3 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
-              >
-                <option value="">Tous les créateurs</option>
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>{u.username}</option>
-                ))}
-              </select>
-              <button
-                onClick={() => setSortDirection(dir => dir === 'asc' ? 'desc' : 'asc')}
-                className="rounded-xl bg-slate-100 px-3 py-2.5 text-xs font-bold uppercase text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
-                title={sortDirection === 'asc' ? 'Tri croissant' : 'Tri décroissant'}
-              >
-                {sortDirection === 'asc' ? '↑' : '↓'}
-              </button>
-            </div>
+            <select
+              value={sortField}
+              onChange={(e) => setSortField(e.target.value as any)}
+              className="w-full sm:w-auto min-w-[180px] rounded-xl border-none bg-slate-50 py-2.5 px-3 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
+            >
+              <option value="nom">Trier par nom</option>
+              <option value="dateCreation">Trier par date</option>
+              <option value="createdByUsername">Trier par créateur</option>
+            </select>
+            <select
+              value={filterCreatorId ?? ''}
+              onChange={(e) => setFilterCreatorId(e.target.value ? Number(e.target.value) : null)}
+              className="w-full sm:w-auto min-w-[180px] rounded-xl border-none bg-slate-50 py-2.5 px-3 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
+            >
+              <option value="">Tous les créateurs</option>
+              {users.map((u) => (
+                <option key={u.id} value={u.id}>{u.username}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => setSortDirection(dir => dir === 'asc' ? 'desc' : 'asc')}
+              className="rounded-xl bg-slate-100 px-3 py-2.5 text-xs font-bold uppercase text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+              title={sortDirection === 'asc' ? 'Tri croissant' : 'Tri décroissant'}
+            >
+              {sortDirection === 'asc' ? '↑' : '↓'}
+            </button>
           </div>
         </motion.div>
       )}
@@ -715,8 +710,8 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
             </div>
           </div>
             
-            <div className="hidden sm:block overflow-x-auto">
-              <table className="w-full text-left border-separate border-spacing-y-4">
+            <div className="hidden sm:block overflow-x-auto rounded-[2rem] bg-white shadow-soft dark:bg-slate-900 p-4">
+              <table className="w-full text-left border-separate border-spacing-y-4 border border-slate-200 dark:border-slate-700">
                 <thead>
                   <tr className="text-xs font-extrabold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
                     <th className="px-6 py-3">Fonction</th>
@@ -734,7 +729,7 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
                     <motion.tr 
                       layout 
                       key={step.id} 
-                      className="group transition-all duration-300 hover:translate-x-1"
+                       className="group transition-all duration-300"
                     >
                        <td className="rounded-l-[1.5rem] bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors shadow-sm group-hover:shadow-md">
                          <div className="flex items-center gap-2">

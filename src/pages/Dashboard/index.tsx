@@ -185,7 +185,7 @@ export default function DashboardPage() {
           <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Performance des agents (Bugs trouvés)</h2>
         </div>
         <div className="overflow-x-auto hide-scrollbar">
-          <table className="w-full text-left border-separate border-spacing-y-2">
+           <table className="w-full text-left border-separate border-spacing-y-2 border border-slate-200 dark:border-slate-700">
             <thead>
               <tr className="text-xs font-bold uppercase tracking-wider text-slate-400">
                 <th className="px-4 pb-2">Agent</th>

@@ -284,8 +284,8 @@ export default function ApplicationLinksPage() {
         transition={{ duration: 0.3 }}
         className="rounded-[2rem] bg-white p-4 shadow-soft dark:bg-slate-900"
       >
-        <div className="flex flex-col gap-3">
-          <div className="relative">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
@@ -299,7 +299,7 @@ export default function ApplicationLinksPage() {
             <select
               value={filterApplicationId ?? ''}
               onChange={(e) => setFilterApplicationId(e.target.value ? Number(e.target.value) : null)}
-              className="flex-1 min-w-[140px] rounded-xl border-none bg-slate-50 py-2.5 px-3 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
+              className="w-full sm:w-auto min-w-[180px] rounded-xl border-none bg-slate-50 py-2.5 px-3 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
             >
               <option value="">Toutes les applications</option>
               {applications.map((app) => (
@@ -309,7 +309,7 @@ export default function ApplicationLinksPage() {
             <select
               value={sortField}
               onChange={(e) => setSortField(e.target.value as any)}
-              className="flex-1 min-w-[140px] rounded-xl border-none bg-slate-50 py-2.5 px-3 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
+              className="w-full sm:w-auto min-w-[180px] rounded-xl border-none bg-slate-50 py-2.5 px-3 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-sky-400 dark:bg-slate-950"
             >
               <option value="nom">Trier par nom</option>
               <option value="type">Trier par type</option>
@@ -410,8 +410,8 @@ export default function ApplicationLinksPage() {
         )}
       </AnimatePresence>
 
-      <div className="hidden sm:block overflow-x-auto">
-        <table className="w-full text-left border-separate border-spacing-y-4">
+      <div className="hidden sm:block overflow-x-auto w-full">
+        <table className="w-full text-left border-separate border-spacing-y-4 border border-slate-200 dark:border-slate-700">
           <thead>
             <tr className="text-xs font-extrabold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
               <th className="px-6 py-3">Nom</th>
@@ -427,7 +427,7 @@ export default function ApplicationLinksPage() {
               <motion.tr
                 layout
                 key={link.id}
-                className="group transition-all duration-300 hover:translate-x-1"
+                 className="group transition-all duration-300"
               >
                 <td className="rounded-l-[1.5rem] bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-all shadow-sm group-hover:shadow-md">
                   <div className="flex items-center gap-3">

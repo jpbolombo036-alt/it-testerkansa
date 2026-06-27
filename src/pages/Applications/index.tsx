@@ -197,8 +197,8 @@ className="rounded-[2.5rem] bg-white p-6 shadow-md dark:bg-slate-900"
         </div>
 
         {/* Desktop/Tablet View (Table) */}
-        <div className="hidden sm:block overflow-x-auto">
-         <table className="w-full text-left border-separate border-spacing-y-4">
+        <div className="hidden sm:block overflow-x-auto w-full">
+         <table className="w-full text-left border-separate border-spacing-y-4 border border-slate-200 dark:border-slate-700">
            <thead>
              <tr className="text-xs font-extrabold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
                <th className="px-6 py-3">Nom</th>
@@ -214,7 +214,7 @@ className="rounded-[2.5rem] bg-white p-6 shadow-md dark:bg-slate-900"
                 <motion.tr
                   layout
                   key={app.id}
-                  className="group transition-all duration-300 hover:translate-x-1"
+                   className="group transition-all duration-300"
                 >
                  <td className="rounded-l-[1.5rem] bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-all shadow-sm group-hover:shadow-md">
                    <div className="flex items-center gap-3">

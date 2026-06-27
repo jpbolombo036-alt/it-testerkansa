@@ -8,7 +8,7 @@ import { useAuth } from '../hooks/useAuth'
 export default function MobileMenu() {
   const [open, setOpen] = useState(false)
   const { user } = useAuth()
-  const isAdmin = user?.role === 'ADMIN'
+  const isAdmin = user?.role === 'admin'
   const visibleMenuItems = baseMenuItems
 
   useEffect(() => {

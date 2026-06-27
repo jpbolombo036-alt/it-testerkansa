@@ -162,8 +162,8 @@ export default function ComptesPage() {
         transition={{ duration: 0.3 }}
         className="rounded-[2rem] bg-white p-4 shadow-soft dark:bg-slate-900"
       >
-        <div className="flex flex-col gap-3">
-          <div className="relative">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
@@ -177,7 +177,7 @@ export default function ComptesPage() {
             <select
               value={filterApplicationId ?? ''}
               onChange={(e) => setFilterApplicationId(e.target.value ? Number(e.target.value) : null)}
-              className="flex-1 min-w-[140px] rounded-xl border-none bg-slate-50 py-2.5 px-3 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-400 dark:bg-slate-950"
+              className="w-full sm:w-auto min-w-[180px] rounded-xl border-none bg-slate-50 py-2.5 px-3 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-400 dark:bg-slate-950"
             >
               <option value="">Toutes les applications</option>
               {applications.map((app) => (
@@ -187,7 +187,7 @@ export default function ComptesPage() {
             <select
               value={sortField}
               onChange={(e) => setSortField(e.target.value as any)}
-              className="flex-1 min-w-[140px] rounded-xl border-none bg-slate-50 py-2.5 px-3 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-400 dark:bg-slate-950"
+              className="w-full sm:w-auto min-w-[180px] rounded-xl border-none bg-slate-50 py-2.5 px-3 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-emerald-400 dark:bg-slate-950"
             >
               <option value="username">Trier par utilisateur</option>
               <option value="role">Trier par rôle</option>
@@ -297,8 +297,8 @@ export default function ComptesPage() {
       ) : (
         <>
 {/* Desktop/Tablet Table View */}
-           <div className="hidden sm:block overflow-x-auto hide-scrollbar">
-            <table className="w-full text-left border-separate border-spacing-y-4">
+           <div className="hidden sm:block overflow-x-auto hide-scrollbar w-full">
+             <table className="w-full text-left border-separate border-spacing-y-4 border border-slate-200 dark:border-slate-700">
 <thead>
                  <tr className="text-xs font-extrabold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
                    <th className="px-6 py-3">Utilisateur</th>
@@ -314,7 +314,7 @@ export default function ComptesPage() {
                   <motion.tr 
                     layout 
                     key={account.id} 
-                    className="group transition-all duration-300 hover:translate-x-1"
+                     className="group transition-all duration-300"
                   >
                     <td className="rounded-l-[1.5rem] bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-all shadow-sm group-hover:shadow-md">
                       <div className="flex items-center gap-3">
@@ -335,7 +335,7 @@ export default function ComptesPage() {
                       </p>
                     </td>
                     <td className="bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-all shadow-sm group-hover:shadow-md">
-                      <span className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider ${account.role === 'ADMIN' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
+                      <span className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider ${account.role === 'admin' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
                         {account.role}
                       </span>
                     </td>

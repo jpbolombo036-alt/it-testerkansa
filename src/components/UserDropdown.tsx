@@ -62,7 +62,7 @@ export default function UserDropdown() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.98 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="absolute right-0 top-full z-40 mt-2 w-80 max-w-[calc(100vw-0.5rem)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700/60 dark:bg-slate-900"
+             className="absolute right-0 top-full z-40 mt-2 w-80 max-w-[calc(100vw-0.5rem)] max-h-[70vh] overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700/60 dark:bg-slate-900"
           >
             <div className="border-b border-slate-200 p-4 dark:border-slate-700/60">
               <p className="text-sm font-semibold text-slate-900 dark:text-white">{user.username}</p>

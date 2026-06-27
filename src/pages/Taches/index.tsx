@@ -255,7 +255,7 @@ export default function TachesPage() {
    } else {
      viewContent = (
      <div className="overflow-x-auto">
-       <table className="w-full text-left border-separate border-spacing-y-3">
+        <table className="w-full text-left border-separate border-spacing-y-3 border border-slate-200 dark:border-slate-700">
          <thead>
            <tr className="text-xs font-bold uppercase text-slate-400 px-4">
              <th className="px-4 pb-2">Tâche</th>

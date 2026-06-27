@@ -94,3 +94,8 @@ export async function closeSession(id: number) {
    const response = await api.post<TestSession>(`/test-sessions/${id}/close`)
    return response.data
 }
+
+export async function reopenSession(id: number) {
+   const response = await api.post<TestSession>(`/test-sessions/${id}/reopen`)
+   return response.data
+}

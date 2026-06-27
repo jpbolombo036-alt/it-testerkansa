@@ -82,7 +82,7 @@ Si vous utilisez un ORM :
 3. `PUT /tests/42` avec body `{ "resolved": false }` → vérifier que `GET /tests/42` retourne `"resolved": false`
 4. Appeler `PUT /tests/42` avec d'autres champs (ex: `{ "statut": "OK" }`) → vérifier que `resolved` n'est pas écrasé ou modifié involontairement
 
-## 7. Endpoint `GET /dashboard/stats` — ajout compteurs résolusefef
+## 7. Endpoint `GET /dashboard/stats` — ajout compteurs résolus
 
 La réponse JSON doit inclure 3 nouveaux champs :
 

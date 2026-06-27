@@ -209,49 +209,51 @@ export default function PresencesPage() {
         />
       </div>
 
-      <div className="rounded-[2.5rem] bg-white p-6 shadow-soft dark:bg-slate-900">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Mon pointage du jour</h2>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          {myAttendance ? (
-            <div className="flex-1 grid grid-cols-3 gap-4">
-              <div className="text-center p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/30">
-                <p className="text-xs text-slate-500 uppercase">Arrivée</p>
-                <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{myAttendance.checkInTime || '-'}</p>
+      {user?.role === 'admin' && (
+        <div className="rounded-[2.5rem] bg-white p-6 shadow-soft dark:bg-slate-900">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Mon pointage du jour</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            {myAttendance ? (
+              <div className="flex-1 grid grid-cols-3 gap-4">
+                <div className="text-center p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/30">
+                  <p className="text-xs text-slate-500 uppercase">Arrivée</p>
+                  <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{myAttendance.checkInTime || '-'}</p>
+                </div>
+                <div className="text-center p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/30">
+                  <p className="text-xs text-slate-500 uppercase">Départ</p>
+                  <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{myAttendance.checkOutTime || '-'}</p>
+                </div>
+                <div className="text-center p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/30">
+                  <p className="text-xs text-slate-500 uppercase">Durée</p>
+                  <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{myAttendance.duration || '-'}</p>
+                </div>
               </div>
-              <div className="text-center p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/30">
-                <p className="text-xs text-slate-500 uppercase">Départ</p>
-                <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{myAttendance.checkOutTime || '-'}</p>
+            ) : (
+              <div className="flex-1">
+                <p className="text-slate-500">Vous n'avez pas encore pointé votre arrivée aujourd'hui.</p>
               </div>
-              <div className="text-center p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/30">
-                <p className="text-xs text-slate-500 uppercase">Durée</p>
-                <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{myAttendance.duration || '-'}</p>
-              </div>
+            )}
+            <div className="flex gap-2">
+              <button
+                onClick={handleCheckIn}
+                disabled={isCheckingIn || !!(myAttendance?.checkInTime)}
+                className="flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isCheckingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
+                Pointer arrivée
+              </button>
+              <button
+                onClick={handleCheckOut}
+                disabled={isCheckingOut || !(myAttendance?.checkInTime)}
+                className="flex items-center gap-2 rounded-2xl bg-sky-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isCheckingOut ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
+                Pointer départ
+              </button>
             </div>
-          ) : (
-            <div className="flex-1">
-              <p className="text-slate-500">Vous n'avez pas encore pointé votre arrivée aujourd'hui.</p>
-            </div>
-          )}
-          <div className="flex gap-2">
-            <button
-              onClick={handleCheckIn}
-              disabled={isCheckingIn || !!(myAttendance?.checkInTime)}
-              className="flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isCheckingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
-              Pointer arrivée
-            </button>
-            <button
-              onClick={handleCheckOut}
-              disabled={isCheckingOut || !(myAttendance?.checkInTime)}
-              className="flex items-center gap-2 rounded-2xl bg-sky-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isCheckingOut ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
-              Pointer départ
-            </button>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="rounded-[2.5rem] bg-white p-6 shadow-soft dark:bg-slate-900">
         <div className="flex items-center justify-between mb-4">
@@ -268,7 +270,7 @@ export default function PresencesPage() {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-separate border-spacing-y-4">
+           <table className="w-full text-left border-separate border-spacing-y-4 border border-slate-200 dark:border-slate-700">
             <thead>
               <tr className="text-xs font-extrabold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
                 <th className="px-4 py-2">Agent</th>

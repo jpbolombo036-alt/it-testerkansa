@@ -76,7 +76,7 @@ export default function UsersAdminPage() {
 
    const totalUsers = users.length
    const activeUsers = users.filter(u => u.isActive).length
-   const adminCount = users.filter(u => u.role === 'ADMIN').length
+    const adminCount = users.filter(u => u.role === 'admin').length
    const activityRate = totalUsers > 0 ? Math.round((activeUsers / totalUsers) * 100) : 0
 
    return (
@@ -163,7 +163,7 @@ export default function UsersAdminPage() {
            </div>
          ) : (
            <div className="overflow-x-auto">
-             <table className="w-full text-left border-separate border-spacing-y-4">
+              <table className="w-full text-left border-separate border-spacing-y-4 border border-slate-200 dark:border-slate-700">
                <thead>
                  <tr className="text-xs font-extrabold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
                    <th className="px-6 py-3">Utilisateur</th>
@@ -177,7 +177,7 @@ export default function UsersAdminPage() {
                    <motion.tr 
                      layout
                      key={user.id} 
-                     className="group transition-all duration-300 hover:translate-x-1"
+                      className="group transition-all duration-300"
                    >
                      <td className="rounded-l-[1.5rem] bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors shadow-sm group-hover:shadow-md">
                        <div className="flex items-center gap-3">
@@ -192,7 +192,7 @@ export default function UsersAdminPage() {
                      </td>
                      <td className="bg-slate-50/50 p-5 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors shadow-sm group-hover:shadow-md">
                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider ${
-                         user.role === 'ADMIN' 
+                          user.role === 'admin'
                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300' 
                            : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'
                        }`}>
