@@ -79,7 +79,11 @@ const AppRoutes: React.FC = () => {
           <Route path="/document-archive/:id" element={<DocumentDetailPage />} />
           <Route path="/document-archive/:id/preview" element={<DocumentPreviewPage />} />
           <Route path="/rapports" element={<RapportsPage />} />
-          <Route path="/presences" element={<FeatureRoute feature="presencesEnabled"><PresencesPage /></FeatureRoute>} />
+          <Route path="/presences" element={
+            <AdminRoute>
+              <FeatureRoute feature="presencesEnabled"><PresencesPage /></FeatureRoute>
+            </AdminRoute>
+          } />
           <Route path="/profil" element={<ProfilPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
         </Route>

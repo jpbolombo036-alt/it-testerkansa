@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Loader2, Users, Clock, AlertCircle, CheckSquare, LogIn, LogOut, RefreshCw, Calendar, ChevronLeft, ChevronRight, Search } from 'lucide-react'
+import { Loader2, Users, Clock, AlertCircle, CheckSquare, LogIn, LogOut, RefreshCw, Calendar, ChevronLeft, ChevronRight, Search, X, UserPlus, Trash2 } from 'lucide-react'
 import { useToast } from '../../components/ToastProvider'
-import { fetchTodayDashboard, checkIn, checkOut, fetchAttendances, AttendanceDashboardDTO, AttendanceReportDTO, PageResponse } from '../../api/attendanceApi'
+import { fetchTodayDashboard, checkIn, checkOut, fetchAttendances, createAttendance, updateAttendance, deleteAttendance, AttendanceDashboardDTO, AttendanceReportDTO, PageResponse } from '../../api/attendanceApi'
 import { useAuth } from '../../hooks/useAuth'
+import { fetchUsers, User } from '../../api/userApi'
 import StatCard from '../../components/StatCard'
 
 export default function PresencesPage() {
@@ -18,9 +19,16 @@ export default function PresencesPage() {
   const [isCheckingOut, setIsCheckingOut] = useState(false)
   const [page, setPage] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
+  const [users, setUsers] = useState<User[]>([])
+  const [loadingUsers, setLoadingUsers] = useState(true)
+  const [editingAgentId, setEditingAgentId] = useState<number | null>(null)
+  const [editingStatus, setEditingStatus] = useState<'PRESENT' | 'LATE' | 'ABSENT' | 'LEAVE'>('PRESENT')
+  const [editingReason, setEditingReason] = useState('')
+  const [savingStatus, setSavingStatus] = useState(false)
 
   useEffect(() => {
     loadAll()
+    loadUsers()
   }, [])
 
   const loadAll = async () => {
@@ -42,6 +50,19 @@ export default function PresencesPage() {
       setDashboard(null)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const loadUsers = async () => {
+    try {
+      setLoadingUsers(true)
+      const data = await fetchUsers()
+      setUsers(data)
+    } catch (err) {
+      console.error('Erreur chargement utilisateurs', err)
+      setUsers([])
+    } finally {
+      setLoadingUsers(false)
     }
   }
 
@@ -71,13 +92,98 @@ export default function PresencesPage() {
     }
   }
 
+  const todayStr = new Date().toISOString().split('T')[0]
+  const currentTime = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+
+  const getAttendanceForAgent = (agentId: number): AttendanceReportDTO | undefined => {
+    return dashboard?.attendances.find((a: AttendanceReportDTO) => a.agentId === agentId)
+  }
+
+  const handleAdminCheckIn = async (agentId: number) => {
+    try {
+      const data = await createAttendance({
+        agentId,
+        date: todayStr,
+        checkInTime: currentTime,
+        status: 'PRESENT'
+      })
+      showToast('success', 'Arrivée enregistrée', `Arrivée de l'agent enregistrée à ${data.checkInTime}`)
+      loadAll()
+    } catch {
+      showToast('error', 'Erreur', "Impossible d'enregistrer l'arrivée.")
+    }
+  }
+
+  const handleAdminCheckOut = async (attendanceId: number) => {
+    try {
+      const data = await updateAttendance(attendanceId, { checkOutTime: currentTime })
+      showToast('success', 'Départ enregistré', `Départ enregistré à ${data.checkOutTime}`)
+      loadAll()
+    } catch {
+      showToast('error', 'Erreur', 'Impossible d\'enregistrer le départ.')
+    }
+  }
+
+  const handleAdminOpenStatus = (attendance: AttendanceReportDTO) => {
+    setEditingAgentId(attendance.agentId)
+    setEditingStatus(attendance.status)
+    setEditingReason(attendance.reason || '')
+  }
+
+  const handleAdminSaveStatus = async () => {
+    if (editingAgentId === null) return
+    const attendance = getAttendanceForAgent(editingAgentId)
+    if (!attendance) return
+    try {
+      setSavingStatus(true)
+      await updateAttendance(attendance.id, { status: editingStatus, reason: editingReason || null })
+      showToast('success', 'Statut mis à jour', 'Le statut de présence a été modifié.')
+      setEditingAgentId(null)
+      loadAll()
+    } catch {
+      showToast('error', 'Erreur', 'Impossible de mettre à jour le statut.')
+    } finally {
+      setSavingStatus(false)
+    }
+  }
+
+  const handleAdminCreateStatus = async (agentId: number) => {
+    try {
+      setSavingStatus(true)
+      await createAttendance({
+        agentId,
+        date: todayStr,
+        status: editingStatus,
+        reason: editingReason ? editingReason : undefined
+      })
+      showToast('success', 'Présence créée', 'Le pointage a été créé.')
+      setEditingAgentId(null)
+      loadAll()
+    } catch {
+      showToast('error', 'Erreur', 'Impossible de créer le pointage.')
+    } finally {
+      setSavingStatus(false)
+    }
+  }
+
+  const handleAdminDelete = async (attendanceId: number) => {
+    if (!confirm('Supprimer ce pointage ?')) return
+    try {
+      await deleteAttendance(attendanceId)
+      showToast('success', 'Supprimé', 'Le pointage a été supprimé.')
+      loadAll()
+    } catch {
+      showToast('error', 'Erreur', 'Impossible de supprimer le pointage.')
+    }
+  }
+
   const myAttendance = dashboard?.attendances.find((a: AttendanceReportDTO) => a.agentId === user?.id)
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'PRESENT': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
       case 'LATE': return 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'
-      case 'ABSENT': return 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300'
+      case 'ABSENT': return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300'
       case 'LEAVE': return 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300'
       default: return 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'
     }
@@ -209,8 +315,7 @@ export default function PresencesPage() {
         />
       </div>
 
-      {user?.role === 'admin' && (
-        <div className="rounded-[2.5rem] bg-white p-6 shadow-soft dark:bg-slate-900">
+      <div className="rounded-[2.5rem] bg-white p-6 shadow-soft dark:bg-slate-900">
           <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Mon pointage du jour</h2>
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             {myAttendance ? (
@@ -253,7 +358,6 @@ export default function PresencesPage() {
             </div>
           </div>
         </div>
-      )}
 
       <div className="rounded-[2.5rem] bg-white p-6 shadow-soft dark:bg-slate-900">
         <div className="flex items-center justify-between mb-4">
@@ -342,6 +446,146 @@ export default function PresencesPage() {
             </div>
           </div>
         )}
+      </div>
+
+      <div className="rounded-[2.5rem] bg-white p-6 shadow-soft dark:bg-slate-900">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Administration des présences</h2>
+          {loadingUsers ? (
+            <Loader2 className="h-5 w-5 animate-spin text-sky-600" />
+          ) : (
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{users.length} agents</span>
+          )}
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-separate border-spacing-y-4 border border-slate-200 dark:border-slate-700">
+            <thead>
+              <tr className="text-xs font-extrabold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
+                <th className="px-4 py-2">Agent</th>
+                <th className="px-4 py-2">Arrivée</th>
+                <th className="px-4 py-2">Départ</th>
+                <th className="px-4 py-2">Statut</th>
+                <th className="px-4 py-2 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.length === 0 && !loadingUsers ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-8 text-slate-500">
+                    Aucun agent disponible.
+                  </td>
+                </tr>
+              ) : (
+                users.map((u) => {
+                  const attendance = getAttendanceForAgent(u.id)
+                  const isEditing = editingAgentId === u.id
+                  return (
+                    <motion.tr
+                      key={u.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="group transition-all"
+                    >
+                      <td className="rounded-l-2xl bg-slate-50/50 p-4 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors shadow-sm group-hover:shadow-md">
+                        <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{u.username}</span>
+                      </td>
+                      <td className="bg-slate-50/50 p-4 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors">
+                        <span className="text-sm text-slate-600 dark:text-slate-400">{attendance?.checkInTime || '-'}</span>
+                      </td>
+                      <td className="bg-slate-50/50 p-4 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors">
+                        <span className="text-sm text-slate-600 dark:text-slate-400">{attendance?.checkOutTime || '-'}</span>
+                      </td>
+                      <td className="bg-slate-50/50 p-4 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors">
+                        {isEditing ? (
+                          <select
+                            value={editingStatus}
+                            onChange={(e) => setEditingStatus(e.target.value as any)}
+                            className="text-xs font-bold rounded-lg border border-slate-200 bg-white px-2 py-1 dark:bg-slate-900 dark:border-slate-700"
+                          >
+                            <option value="PRESENT">Présent</option>
+                            <option value="LATE">En retard</option>
+                            <option value="ABSENT">Absent</option>
+                            <option value="LEAVE">Congé</option>
+                          </select>
+                        ) : (
+                          <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ${attendance ? getStatusBadgeClass(attendance.status) : 'bg-slate-100 text-slate-600'}`}>
+                            {attendance ? getStatusLabel(attendance.status) : 'Aucun'}
+                          </span>
+                        )}
+                      </td>
+                      <td className="rounded-r-2xl bg-slate-50/50 p-4 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors">
+                        <div className="flex items-center justify-end gap-2">
+                          {!attendance?.checkInTime && (
+                            <button
+                              onClick={() => handleAdminCheckIn(u.id)}
+                              className="p-2 rounded-lg bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100 dark:bg-emerald-500/15 dark:text-emerald-300 dark:hover:bg-emerald-500/25"
+                              title="Pointer arrivée"
+                            >
+                              <LogIn className="h-4 w-4" />
+                            </button>
+                          )}
+                          {attendance?.checkInTime && !attendance.checkOutTime && (
+                            <button
+                              onClick={() => handleAdminCheckOut(attendance.id)}
+                              className="p-2 rounded-lg bg-sky-50 text-sky-700 transition hover:bg-sky-100 dark:bg-sky-500/15 dark:text-sky-300 dark:hover:bg-sky-500/25"
+                              title="Pointer départ"
+                            >
+                              <LogOut className="h-4 w-4" />
+                            </button>
+                          )}
+                          {attendance ? (
+                            <>
+                              {isEditing ? (
+                                <>
+                                  <button
+                                    onClick={handleAdminSaveStatus}
+                                    disabled={savingStatus}
+                                    className="px-3 py-1.5 rounded-lg bg-sky-600 text-white text-xs font-bold disabled:opacity-50"
+                                  >
+                                    {savingStatus ? <Loader2 className="h-3 w-3 animate-spin" /> : 'OK'}
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingAgentId(null)}
+                                    className="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-700 text-xs font-bold dark:bg-slate-700 dark:text-slate-300"
+                                  >
+                                    Annuler
+                                  </button>
+                                </>
+                              ) : (
+                                <button
+                                  onClick={() => handleAdminOpenStatus(attendance)}
+                                  className="px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 text-xs font-bold transition hover:bg-amber-100 dark:bg-amber-500/15 dark:text-amber-300 dark:hover:bg-amber-500/25"
+                                  title="Modifier statut"
+                                >
+                                  Éditer
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleAdminDelete(attendance.id)}
+                                className="p-2 rounded-lg bg-rose-50 text-rose-700 transition hover:bg-rose-100 dark:bg-rose-500/15 dark:text-rose-300 dark:hover:bg-rose-500/25"
+                                title="Supprimer"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={() => { setEditingAgentId(u.id); setEditingStatus('PRESENT'); setEditingReason('') }}
+                              className="px-3 py-1.5 rounded-lg bg-sky-50 text-sky-700 text-xs font-bold transition hover:bg-sky-100 dark:bg-sky-500/15 dark:text-sky-300 dark:hover:bg-sky-500/25"
+                              title="Créer pointage"
+                            >
+                              <UserPlus className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </motion.tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )
