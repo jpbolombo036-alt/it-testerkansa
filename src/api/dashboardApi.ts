@@ -24,6 +24,7 @@ export interface AgentPerformance {
   agentName: string;
   bugsFound: number;
   testsExecuted: number;
+  testsCreated: number;
   bugRate: number; // (bugsFound / testsExecuted) * 100
 }
 

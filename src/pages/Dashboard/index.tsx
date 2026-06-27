@@ -1,5 +1,6 @@
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { Layers, CreditCard, Users2, CheckSquare, Loader2, User } from 'lucide-react'
+import { Layers, CreditCard, Users2, CheckSquare, Loader2, User, LayoutDashboard } from 'lucide-react'
+import { useAuth } from '../../hooks/useAuth'
 import StatCard from '../../components/StatCard'
 import { useEffect, useState } from 'react'
 import { fetchDashboardStats, DashboardStats, AgentPerformance } from '../../api/dashboardApi'
@@ -18,8 +19,14 @@ const trendData = [
 ]
 
 export default function DashboardPage() {
+  const { user } = useAuth()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [agentPerformance, setAgentPerformance] = useState<AgentPerformance[]>([])
+  const [userTestsCount, setUserTestsCount] = useState(0)
+  const [userTestsOk, setUserTestsOk] = useState(0)
+  const [userTestsBug, setUserTestsBug] = useState(0)
+  const [userTestsResolved, setUserTestsResolved] = useState(0)
+  const [userTestsEnCours, setUserTestsEnCours] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -46,11 +53,15 @@ export default function DashboardPage() {
             )
           );
           const bugsByAgent = testsByAgent.filter(t => t.statut === 'BUG').length;
+          const testsCreated = tests.filter(t =>
+            t && (t.createdBy === u.id || t.createdByUsername === u.username)
+          ).length;
           
           return {
             agentName: u.username,
             bugsFound: bugsByAgent,
             testsExecuted: testsByAgent.length,
+            testsCreated,
             bugRate: testsByAgent.length > 0 
               ? parseFloat(((bugsByAgent / testsByAgent.length) * 100).toFixed(2)) 
               : 0
@@ -61,6 +72,21 @@ export default function DashboardPage() {
         performance = performance.sort((a, b) => b.bugsFound - a.bugsFound);
 
         setAgentPerformance(performance);
+
+        if (user && tests.length > 0) {
+          const myTests = tests.filter(t =>
+            t && (
+              t.createdBy === user.id ||
+              t.executeur === user.username ||
+              t.createdByUsername === user.username
+            )
+          );
+          setUserTestsCount(myTests.length);
+          setUserTestsOk(myTests.filter(t => t.statut === 'OK').length);
+          setUserTestsBug(myTests.filter(t => t.statut === 'BUG').length);
+          setUserTestsResolved(myTests.filter(t => t.statut === 'RESOLU').length);
+          setUserTestsEnCours(myTests.filter(t => t.statut === 'EN_COURS' || t.statut === 'EN_COURS').length);
+        }
       })
       .catch(console.error)
       .finally(() => setIsLoading(false))
@@ -78,7 +104,17 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Tableau de bord</h1>
+      <div className="rounded-[2.5rem] bg-white p-6 shadow-soft dark:bg-slate-900">
+        <div className="flex items-center gap-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">
+            <LayoutDashboard className="h-8 w-8" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Tableau de bord</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Vue d'ensemble de votre activité</p>
+          </div>
+        </div>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
@@ -104,8 +140,8 @@ export default function DashboardPage() {
         />
         <StatCard
           title="Tests"
-          value={stats.tests.toString()}
-          description="Tests totaux"
+          value={user?.role === 'admin' ? stats.tests.toString() : userTestsCount.toString()}
+          description={user?.role === 'admin' ? 'Tests totaux' : 'Mes tests'}
           icon={<CheckSquare className="h-6 w-6 text-amber-600" />}
           panelClass="bg-amber-50 dark:bg-amber-500/10"
         />
@@ -113,23 +149,41 @@ export default function DashboardPage() {
 
       <div className="grid gap-4 xl:grid-cols-3">
         <div className="xl:col-span-2 rounded-[2rem] bg-white p-6 shadow-soft dark:bg-slate-900">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Statistiques des tests</h2>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
+            {user?.role === 'admin' ? 'Statistiques des tests' : 'Mes statistiques'}
+          </h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             <div className="text-center">
-              <p className="text-2xl font-bold text-emerald-600">{stats.testsOk}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">OK ({stats.testsRateOk}%)</p>
+              <p className="text-2xl font-bold text-emerald-600">
+                {user?.role === 'admin' ? stats.testsOk : userTestsOk}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                OK ({user?.role === 'admin' ? stats.testsRateOk : (userTestsCount > 0 ? Math.round((userTestsOk / userTestsCount) * 100) : 0)}%)
+              </p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-rose-600">{stats.testsBug}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">BUG ({stats.testsRateBug}%)</p>
+              <p className="text-2xl font-bold text-rose-600">
+                {user?.role === 'admin' ? stats.testsBug : userTestsBug}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                BUG ({user?.role === 'admin' ? stats.testsRateBug : (userTestsCount > 0 ? Math.round((userTestsBug / userTestsCount) * 100) : 0)}%)
+              </p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-sky-600">{stats.testsResolved}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Résolus ({stats.testsRateResolved}%)</p>
+              <p className="text-2xl font-bold text-sky-600">
+                {user?.role === 'admin' ? stats.testsResolved : userTestsResolved}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Résolus ({user?.role === 'admin' ? stats.testsRateResolved : (userTestsCount > 0 ? Math.round((userTestsResolved / userTestsCount) * 100) : 0)}%)
+              </p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-amber-600">{stats.testsEnCours}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">En cours ({stats.testsRatePending}%)</p>
+              <p className="text-2xl font-bold text-amber-600">
+                {user?.role === 'admin' ? stats.testsEnCours : userTestsEnCours}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                En cours ({user?.role === 'admin' ? stats.testsRatePending : (userTestsCount > 0 ? Math.round((userTestsEnCours / userTestsCount) * 100) : 0)}%)
+              </p>
             </div>
           </div>
           <div className="h-[180px]">
@@ -152,91 +206,164 @@ export default function DashboardPage() {
         </div>
 
         <div className="rounded-[2rem] bg-white p-6 shadow-soft dark:bg-slate-900">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Résumé</h2>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
+            {user?.role === 'admin' ? 'Résumé' : 'Mon résumé'}
+          </h2>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-slate-500 dark:text-slate-400">Sessions</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">{stats.sessions}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500 dark:text-slate-400">Bugs signalés</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">{stats.bugReports}</span>
-            </div>
-            <div className="flex justify-between">
               <span className="text-slate-500 dark:text-slate-400">Tests traités</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">{stats.testsResolved} / {stats.tests}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">
+                {user?.role === 'admin' ? `${stats.testsResolved} / ${stats.tests}` : `${userTestsResolved} / ${userTestsCount}`}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500 dark:text-slate-400">Taux de traitement</span>
-              <span className="font-bold text-emerald-600">{stats.testsRateResolved}%</span>
+              <span className="font-bold text-emerald-600">
+                {user?.role === 'admin' ? stats.testsRateResolved : (userTestsCount > 0 ? Math.round((userTestsResolved / userTestsCount) * 100) : 0)}%
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500 dark:text-slate-400">Taux réussite</span>
-              <span className="font-bold text-emerald-600">{stats.testsRateOk}%</span>
-            </div>
-          </div>
+              <span className="font-bold text-emerald-600">
+                {user?.role === 'admin' ? stats.testsRateOk : (userTestsCount > 0 ? Math.round((userTestsOk / userTestsCount) * 100) : 0)}%
+              </span>
+      </div>
+      </div>
         </div>
       </div>
 
       {/* Agent Performance Grid */}
-      <div className="rounded-[2rem] bg-white p-6 shadow-soft dark:bg-slate-900">
-        <div className="flex items-center gap-2 mb-6">
-          <User className="h-5 w-5 text-sky-600" />
-          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Performance des agents (Bugs trouvés)</h2>
-        </div>
-        <div className="overflow-x-auto hide-scrollbar">
-           <table className="w-full text-left border-separate border-spacing-y-2 border border-slate-200 dark:border-slate-700">
-            <thead>
-              <tr className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                <th className="px-4 pb-2">Agent</th>
-                <th className="px-4 pb-2 text-center">Bugs trouvés</th>
-                <th className="px-4 pb-2 text-center">Tests exécutés</th>
-                <th className="px-4 pb-2 text-right">Taux de bug (%)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {agentPerformance.length > 0 ? (
-                agentPerformance.map((agent, index) => (
-                  <motion.tr
-                    key={agent.agentName}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="group"
-                  >
-                    <td className="rounded-l-2xl bg-slate-50/50 p-4 dark:bg-slate-800/40">
-                      <span className="text-sm font-bold text-slate-900 dark:text-white">{agent.agentName}</span>
-                    </td>
-                    <td className="bg-slate-50/50 p-4 dark:bg-slate-800/40 text-center">
-                      <span className="rounded-lg bg-rose-100 px-3 py-1 text-xs font-bold text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">
-                        {agent.bugsFound}
-                      </span>
-                    </td>
-                    <td className="bg-slate-50/50 p-4 dark:bg-slate-800/40 text-center">
-                      <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                        {agent.testsExecuted}
-                      </span>
-                    </td>
-                    <td className="rounded-r-2xl bg-slate-50/50 p-4 text-right dark:bg-slate-800/40">
-                      <span className={`text-sm font-bold ${
-                        agent.bugRate > 20 ? 'text-rose-600' : 
-                        agent.bugRate > 10 ? 'text-amber-600' : 
-                        'text-emerald-600'
-                      }`}>
-                        {agent.bugRate}%
-                      </span>
-                    </td>
-                  </motion.tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={4} className="text-center py-4 text-sm text-slate-500 dark:text-slate-400">Aucune donnée de performance disponible</td>
+      {user?.role === 'admin' ? (
+        <div className="rounded-[2.5rem] bg-white p-6 shadow-soft dark:bg-slate-900">
+          <div className="flex items-center gap-2 mb-6">
+            <User className="h-5 w-5 text-sky-600" />
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Performance des agents (Bugs trouvés)</h2>
+          </div>
+          <div className="overflow-x-auto hide-scrollbar">
+             <table className="w-full text-left border-separate border-spacing-y-2 border border-slate-200 dark:border-slate-700">
+              <thead>
+                <tr className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  <th className="px-4 pb-2">Agent</th>
+                  <th className="px-4 pb-2 text-center">Bugs trouvés</th>
+                  <th className="px-4 pb-2 text-center">Tests exécutés</th>
+                  <th className="px-4 pb-2 text-center">Tests créés</th>
+                  <th className="px-4 pb-2 text-right">Taux de bug (%)</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {agentPerformance.length > 0 ? (
+                  agentPerformance.map((agent, index) => (
+                    <motion.tr
+                      key={agent.agentName}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="group"
+                    >
+                      <td className="rounded-l-2xl bg-slate-50/50 p-4 dark:bg-slate-800/40">
+                        <span className="text-sm font-bold text-slate-900 dark:text-white">{agent.agentName}</span>
+                      </td>
+                      <td className="bg-slate-50/50 p-4 dark:bg-slate-800/40 text-center">
+                        <span className="rounded-lg bg-rose-100 px-3 py-1 text-xs font-bold text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">
+                          {agent.bugsFound}
+                        </span>
+                      </td>
+                      <td className="bg-slate-50/50 p-4 dark:bg-slate-800/40 text-center">
+                        <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                          {agent.testsExecuted}
+                        </span>
+                      </td>
+                      <td className="bg-slate-50/50 p-4 dark:bg-slate-800/40 text-center">
+                        <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                          {agent.testsCreated}
+                        </span>
+                      </td>
+                      <td className="rounded-r-2xl bg-slate-50/50 p-4 text-right dark:bg-slate-800/40">
+                        <span className={`text-sm font-bold ${
+                          agent.bugRate > 20 ? 'text-rose-600' : 
+                          agent.bugRate > 10 ? 'text-amber-600' : 
+                          'text-emerald-600'
+                        }`}>
+                          {agent.bugRate}%
+                        </span>
+                      </td>
+                    </motion.tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="text-center py-4 text-sm text-slate-500 dark:text-slate-400">Aucune donnée de performance disponible</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="rounded-[2.5rem] bg-white p-6 shadow-soft dark:bg-slate-900">
+          <div className="flex items-center gap-2 mb-6">
+            <User className="h-5 w-5 text-sky-600" />
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Ma performance</h2>
+          </div>
+          <div className="overflow-x-auto hide-scrollbar">
+             <table className="w-full text-left border-separate border-spacing-y-2 border border-slate-200 dark:border-slate-700">
+              <thead>
+                <tr className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  <th className="px-4 pb-2">Agent</th>
+                  <th className="px-4 pb-2 text-center">Bugs trouvés</th>
+                  <th className="px-4 pb-2 text-center">Tests exécutés</th>
+                  <th className="px-4 pb-2 text-center">Tests créés</th>
+                  <th className="px-4 pb-2 text-right">Taux de bug (%)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {agentPerformance.length > 0 ? (
+                  agentPerformance.filter(a => a.agentName === user?.username).map((agent, index) => (
+                    <motion.tr
+                      key={agent.agentName}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="group"
+                    >
+                      <td className="rounded-l-2xl bg-slate-50/50 p-4 dark:bg-slate-800/40">
+                        <span className="text-sm font-bold text-slate-900 dark:text-white">{agent.agentName}</span>
+                      </td>
+                      <td className="bg-slate-50/50 p-4 dark:bg-slate-800/40 text-center">
+                        <span className="rounded-lg bg-rose-100 px-3 py-1 text-xs font-bold text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">
+                          {agent.bugsFound}
+                        </span>
+                      </td>
+                      <td className="bg-slate-50/50 p-4 dark:bg-slate-800/40 text-center">
+                        <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                          {agent.testsExecuted}
+                        </span>
+                      </td>
+                      <td className="bg-slate-50/50 p-4 dark:bg-slate-800/40 text-center">
+                        <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                          {agent.testsCreated}
+                        </span>
+                      </td>
+                      <td className="rounded-r-2xl bg-slate-50/50 p-4 text-right dark:bg-slate-800/40">
+                        <span className={`text-sm font-bold ${
+                          agent.bugRate > 20 ? 'text-rose-600' : 
+                          agent.bugRate > 10 ? 'text-amber-600' : 
+                          'text-emerald-600'
+                        }`}>
+                          {agent.bugRate}%
+                        </span>
+                      </td>
+                    </motion.tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="text-center py-4 text-sm text-slate-500 dark:text-slate-400">Aucune donnée de performance disponible</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

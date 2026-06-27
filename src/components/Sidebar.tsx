@@ -16,6 +16,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react'
+import { useAuth } from '../hooks/useAuth'
 
 const baseMenuItems = [
   { label: 'Tableau de bord', to: '/', icon: LayoutDashboard },
@@ -27,10 +28,13 @@ const baseMenuItems = [
   { label: 'Tâches', to: '/taches', icon: FileText },
   { label: 'Messages', to: '/messages', icon: MessageCircle },
   { label: 'Rapports', to: '/rapports', icon: ShieldCheck },
-  { label: 'Présences', to: '/presences', icon: Clock },
-  { label: 'Utilisateurs', to: '/users', icon: Users },
   { label: 'Archive Documents', to: '/document-archive', icon: FolderOpen },
   { label: 'Mon Profil', to: '/profil', icon: UserCircle },
+]
+
+const adminMenuItems = [
+  { label: 'Présences', to: '/presences', icon: Clock },
+  { label: 'Utilisateurs', to: '/users', icon: Users },
 ]
 
 interface SidebarProps {
@@ -41,7 +45,9 @@ interface SidebarProps {
 export { baseMenuItems }
 
 export default function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
-  const visibleMenuItems = baseMenuItems
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin'
+  const menuItems = isAdmin ? [...baseMenuItems, ...adminMenuItems] : baseMenuItems
 
   return (
     <aside className={`fixed left-0 top-0 z-20 hidden h-screen flex-col border-r-2 border-slate-200 bg-white backdrop-blur-xl transition-colors duration-300 dark:border-slate-800 dark:bg-slate-950 md:flex ${collapsed ? 'w-16' : 'w-72'}`}>
@@ -59,7 +65,7 @@ export default function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto hide-scrollbar px-3 py-2">
-          {visibleMenuItems.map((item) => {
+          {menuItems.map((item) => {
             const Icon = item.icon
             return (
               <NavLink

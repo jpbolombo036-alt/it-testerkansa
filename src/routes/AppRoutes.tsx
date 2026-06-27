@@ -65,9 +65,21 @@ const AppRoutes: React.FC = () => {
           <Route path="/taches" element={<TachesPage />} />
           <Route path="/taches/new" element={<TacheCreatePage />} />
           <Route path="/taches/:id/edit" element={<TacheEditPage />} />
-          <Route path="/users" element={<UsersAdminPage />} />
-          <Route path="/users/new" element={<UserCreatePage />} />
-          <Route path="/users/:id/edit" element={<UserEditPage />} />
+          <Route path="/users" element={
+            <AdminRoute>
+              <UsersAdminPage />
+            </AdminRoute>
+          } />
+          <Route path="/users/new" element={
+            <AdminRoute>
+              <UserCreatePage />
+            </AdminRoute>
+          } />
+          <Route path="/users/:id/edit" element={
+            <AdminRoute>
+              <UserEditPage />
+            </AdminRoute>
+          } />
           <Route path="/bloc-notes" element={<BlocNotesPageWrapper />} />
           <Route path="/bloc-notes/new" element={<BlocNotesPageWrapper />} />
           <Route path="/bloc-notes/:id" element={<BlocNotesPageWrapper />} />
