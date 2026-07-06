@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import { useState } from 'react'
 import Header from '../components/Header'
 import Sidebar from '../components/Sidebar'
+import AiChatWidget from '../components/AiChat/AiChatWidget'
 
 export default function MainLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -14,6 +15,8 @@ export default function MainLayout() {
           <Outlet />
         </main>
       </div>
+      {/* Agent IA — visible sur toutes les pages */}
+      <AiChatWidget />
     </div>
   )
 }
