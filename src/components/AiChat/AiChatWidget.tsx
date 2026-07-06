@@ -225,7 +225,7 @@ export default function AiChatWidget() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-white leading-tight">Assistant IA</p>
-                <p className="text-xs text-violet-300/80">IT Access Manager · GPT-4o</p>
+                <p className="text-xs text-violet-300/80">IT Access Manager · Gemini 2.5</p>
               </div>
               <button
                 id="ai-chat-clear"
@@ -300,6 +300,36 @@ export default function AiChatWidget() {
               <div ref={messagesEndRef} />
             </div>
 
+            {/* Quick Suggestions */}
+            {messages.length === 1 && (
+              <div className="px-4 pb-2.5 flex flex-wrap gap-1.5 justify-center">
+                <button
+                  onClick={() => { setInput("Montre-moi les statistiques globales du dashboard 📊"); }}
+                  className="px-2.5 py-1 text-[11px] rounded-full bg-violet-950/40 hover:bg-violet-900/50 border border-violet-800/30 text-violet-200 transition-colors"
+                >
+                  Stats 📊
+                </button>
+                <button
+                  onClick={() => { setInput("Quelles sont les tâches (todos) en attente ? 📝"); }}
+                  className="px-2.5 py-1 text-[11px] rounded-full bg-violet-950/40 hover:bg-violet-900/50 border border-violet-800/30 text-violet-200 transition-colors"
+                >
+                  Tâches 📝
+                </button>
+                <button
+                  onClick={() => { setInput("Quels sont les derniers bugs déclarés ? 🐛"); }}
+                  className="px-2.5 py-1 text-[11px] rounded-full bg-violet-950/40 hover:bg-violet-900/50 border border-violet-800/30 text-violet-200 transition-colors"
+                >
+                  Bugs 🐛
+                </button>
+                <button
+                  onClick={() => { setInput("Quelles sont les dernières versions APK ? 📱"); }}
+                  className="px-2.5 py-1 text-[11px] rounded-full bg-violet-950/40 hover:bg-violet-900/50 border border-violet-800/30 text-violet-200 transition-colors"
+                >
+                  APK 📱
+                </button>
+              </div>
+            )}
+
             {/* Input */}
             <div
               className="px-4 py-3 border-t border-violet-900/30"
@@ -340,7 +370,7 @@ export default function AiChatWidget() {
                 </motion.button>
               </div>
               <p className="text-[10px] text-center mt-2 text-violet-500/60">
-                Propulsé par GPT-4o · Les réponses peuvent contenir des erreurs
+                Propulsé par Gemini 2.5 · Les réponses peuvent contenir des erreurs
               </p>
             </div>
           </motion.div>
@@ -363,6 +393,29 @@ export default function AiChatWidget() {
         .ai-li { padding: 1px 0; }
         .ai-li::before { content: "• "; color: #7c3aed; font-weight: bold; }
         .ai-h1, .ai-h2, .ai-h3 { color: #c4b5fd; font-weight: 600; margin: 6px 0 2px; }
+        
+        /* Table formatting */
+        .ai-message-content table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 10px 0;
+          font-size: 0.85em;
+        }
+        .ai-message-content th {
+          border-bottom: 2px solid rgba(124,58,237,0.4);
+          text-align: left;
+          padding: 6px 4px;
+          color: #c4b5fd;
+          font-weight: 600;
+        }
+        .ai-message-content td {
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+          padding: 6px 4px;
+          color: #e2e8f0;
+        }
+        .ai-message-content tr:hover {
+          background: rgba(255,255,255,0.03);
+        }
       `}</style>
     </>
   )
