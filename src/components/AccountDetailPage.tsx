@@ -5,11 +5,13 @@ import { fetchAccountById, deleteAccount, Account } from '../api/accountApi';
 import { fetchApplications, Application } from '../api/applicationApi';
 import { Loader2, Edit3, Trash2, X, Key, Shield, User, Globe, MessageSquare, Copy, Check, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '../components/ToastProvider';
+import { useConfirm } from '../hooks/useConfirm';
 
 export const AccountDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { confirm, dialog } = useConfirm();
 
   const [account, setAccount] = useState<Account | null>(null);
   const [application, setApplication] = useState<Application | null>(null);
@@ -39,18 +41,27 @@ export const AccountDetailPage: React.FC = () => {
     loadDetail();
   }, [id]);
 
-  const handleDelete = async () => {
-    if (!account?.id || !window.confirm('Supprimer ce compte ?')) return;
-    setDeleting(true);
-    try {
-      await deleteAccount(account.id);
-      showToast('success', 'Compte supprimé', 'Le compte a été supprimé avec succès.');
-      navigate('/comptes');
-    } catch {
-      showToast('error', 'Erreur', 'Impossible de supprimer le compte.');
-    } finally {
-      setDeleting(false);
-    }
+  const handleDelete = () => {
+    if (!account?.id) return;
+    confirm({
+      message: 'Supprimer ce compte ?',
+      title: 'Suppression',
+      variant: 'danger',
+      confirmText: 'Supprimer',
+      cancelText: 'Annuler',
+      onConfirm: async () => {
+        setDeleting(true);
+        try {
+          await deleteAccount(account.id);
+          showToast('success', 'Compte supprimé', 'Le compte a été supprimé avec succès.');
+          navigate('/comptes');
+        } catch {
+          showToast('error', 'Erreur', 'Impossible de supprimer le compte.');
+        } finally {
+          setDeleting(false);
+        }
+      },
+    });
   };
 
   if (loading) {
@@ -72,6 +83,7 @@ export const AccountDetailPage: React.FC = () => {
 
   return (
     <div className="space-y-6 p-6">
+      {dialog}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

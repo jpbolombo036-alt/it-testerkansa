@@ -4,6 +4,7 @@ import { BlocNoteDTO, BLOC_NOTE_STATUSES } from '../dto/BlocNoteDTO';
 import { fetchAllNotes, deleteNote } from '../api/blocNoteApi';
 import { Loader2, Search, Plus, Eye, Edit3, Trash2, X, FileText, StickyNote } from 'lucide-react';
 import { useToast } from '../components/ToastProvider';
+import { useConfirm } from '../hooks/useConfirm';
 
 interface BlocNoteListProps {
   onCreateNew: () => void;
@@ -39,6 +40,7 @@ export const BlocNoteList: React.FC<BlocNoteListProps> = ({
   const [searchTerm, setSearchTerm] = useState(initialSearch || '');
   const [statusFilter, setStatusFilter] = useState(initialStatusFilter || '');
   const { showToast } = useToast();
+  const { confirm, dialog } = useConfirm();
 
   const loadNotes = async () => {
     try {
@@ -58,14 +60,22 @@ export const BlocNoteList: React.FC<BlocNoteListProps> = ({
   }, [refreshTrigger]);
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette note ?')) return;
-    try {
-      await deleteNote(id);
-      setNotes(notes.filter(n => n.id !== id));
-      showToast('success', 'Note supprimée', 'La note a été supprimée avec succès.');
-    } catch {
-      showToast('error', 'Erreur', 'Impossible de supprimer la note.');
-    }
+    confirm({
+      message: 'Êtes-vous sûr de vouloir supprimer cette note ?',
+      title: 'Suppression',
+      variant: 'danger',
+      confirmText: 'Supprimer',
+      cancelText: 'Annuler',
+      onConfirm: async () => {
+        try {
+          await deleteNote(id);
+          setNotes(notes.filter(n => n.id !== id));
+          showToast('success', 'Note supprimée', 'La note a été supprimée avec succès.');
+        } catch {
+          showToast('error', 'Erreur', 'Impossible de supprimer la note.');
+        }
+      },
+    });
   };
 
   const filteredNotes = useMemo(() => {
@@ -101,6 +111,7 @@ export const BlocNoteList: React.FC<BlocNoteListProps> = ({
 
   return (
     <div className="space-y-6">
+      {dialog}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

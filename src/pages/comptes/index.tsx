@@ -5,6 +5,7 @@ import { fetchAccounts, createAccount, updateAccount, deleteAccount, fetchAccoun
 import { fetchApplications, Application } from '../../api/applicationApi'
 import { Folder, Trash2, Edit3, Eye, Plus, Loader2, X, Key, Shield, Search } from 'lucide-react'
 import { useToast } from '../../components/ToastProvider'
+import { useConfirm } from '../../hooks/useConfirm'
 
 export default function ComptesPage() {
   const navigate = useNavigate()
@@ -15,6 +16,7 @@ export default function ComptesPage() {
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { showToast } = useToast()
+  const { confirm, dialog } = useConfirm()
   
   const [searchTerm, setSearchTerm] = useState('')
   const [sortField, setSortField] = useState<'username' | 'role'>('username')
@@ -87,14 +89,22 @@ export default function ComptesPage() {
   }, [sortedAccounts, searchTerm, filterApplicationId]);
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm("Supprimer ce compte ?")) return
-    try {
-      await deleteAccount(id)
-      setAccounts(accounts.filter(a => a.id !== id))
-      showToast('success', 'Compte supprimé', 'L\'accès a été retiré avec succès.')
-    } catch (err) {
-      showToast('error', 'Erreur', 'Impossible de supprimer le compte.')
-    }
+    confirm({
+      message: "Supprimer ce compte ?",
+      title: 'Suppression',
+      variant: 'danger',
+      confirmText: 'Supprimer',
+      cancelText: 'Annuler',
+      onConfirm: async () => {
+        try {
+          await deleteAccount(id)
+          setAccounts(accounts.filter(a => a.id !== id))
+          showToast('success', 'Compte supprimé', 'L\'accès a été retiré avec succès.')
+        } catch (err) {
+          showToast('error', 'Erreur', 'Impossible de supprimer le compte.')
+        }
+      },
+    })
   }
 
   const handleEdit = (account: Account) => {
@@ -129,6 +139,7 @@ export default function ComptesPage() {
 
   return (
     <div className="space-y-8 p-6">
+      {dialog}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

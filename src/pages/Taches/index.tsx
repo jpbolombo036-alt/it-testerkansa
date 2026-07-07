@@ -4,6 +4,8 @@ import { fetchTodos, fetchTodosGroupedByUser, createTodo, updateTodo, deleteTodo
 import { FileText, Plus, Trash2, Edit3, Eye, Search, Loader2, X, Calendar, AlertCircle, CheckCircle2, Clock, UserCircle, Users, Download } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { exportTodosToPDF, exportTodosToWord } from '../../utils/exportUtils'
+import { useToast } from '../../components/ToastProvider'
+import ConfirmDialog, { type ConfirmOptions } from '../../components/ConfirmDialog'
 
 interface UserFilterOption {
   id: number
@@ -21,7 +23,13 @@ export default function TachesPage() {
    const [showModal, setShowModal] = useState(false)
    const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create')
    const [editingId, setEditingId] = useState<number | null>(null)
-   const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const { showToast } = useToast()
+    const [confirmDelete, setConfirmDelete] = useState<ConfirmOptions & { open: boolean; onConfirm: () => void }>({
+      open: false,
+      message: '',
+      onConfirm: () => {},
+    })
 
    const [formData, setFormData] = useState<TodoCreateData>({
      title: '',
@@ -90,29 +98,41 @@ export default function TachesPage() {
         }
         await refreshTodos()
         setShowModal(false)
-      } catch (err) {
-        alert("Erreur lors de l'enregistrement")
+      } catch {
+        showToast('error', 'Erreur', "Erreur lors de l'enregistrement de la tâche.")
       } finally {
         setIsSubmitting(false)
       }
     }
 
     const handleDelete = async (id: number) => {
-      if (!window.confirm("Supprimer cette tâche ?")) return
-      try {
-        await deleteTodo(id)
-        await refreshTodos()
-      } catch (err) {
-        alert("Erreur lors de la suppression")
-      }
+      setConfirmDelete({
+        open: true,
+        message: 'Supprimer cette tâche ?',
+        title: 'Suppression',
+        variant: 'danger',
+        confirmText: 'Supprimer',
+        cancelText: 'Annuler',
+        onConfirm: async () => {
+          try {
+            await deleteTodo(id)
+            await refreshTodos()
+            showToast('success', 'Tâche supprimée', 'La tâche a été supprimée avec succès.')
+          } catch {
+            showToast('error', 'Erreur', 'Impossible de supprimer la tâche.')
+          } finally {
+            setConfirmDelete(c => ({ ...c, open: false }))
+          }
+        },
+      })
     }
 
     const handleToggleComplete = async (todo: Todo) => {
       try {
         await toggleTodo(todo.id)
         await refreshTodos()
-      } catch (err) {
-        alert("Erreur lors de la mise à jour du statut")
+      } catch {
+        showToast('error', 'Erreur', 'Impossible de mettre à jour le statut de la tâche.')
       }
     }
 
@@ -427,8 +447,18 @@ export default function TachesPage() {
                </form>
              </motion.div>
            </div>
-         )}
-       </AnimatePresence>
-     </div>
-   )
-}
+          )}
+        </AnimatePresence>
+        <ConfirmDialog
+          open={confirmDelete.open}
+          title={confirmDelete.title}
+          message={confirmDelete.message}
+          confirmText={confirmDelete.confirmText}
+          cancelText={confirmDelete.cancelText}
+          variant={confirmDelete.variant}
+          onConfirm={confirmDelete.onConfirm}
+          onCancel={() => setConfirmDelete(c => ({ ...c, open: false }))}
+        />
+      </div>
+    )
+  }

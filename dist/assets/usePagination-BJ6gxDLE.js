@@ -1,0 +1,1 @@
+import{n as e,s as t}from"./jsx-runtime-B_R34ikJ.js";var n=t(e(),1);function r(e,t=25){let[r,i]=(0,n.useState)(0);return{currentPage:r,setCurrentPage:i,paginatedItems:(0,n.useMemo)(()=>{let n=r*t;return e.slice(n,n+t)},[e,r,t]),totalPages:Math.max(1,Math.ceil(e.length/t)),totalItems:e.length}}export{r as t};

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { Users as UsersIcon, Trash2, ShieldAlert, ShieldCheck, UserPlus, Loader2, Search, X, Mail, Lock, Shield, UserCheck, Activity, Edit3 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useToast } from '../../components/ToastProvider'
+import { useConfirm } from '../../hooks/useConfirm'
 import StatCard from '../../components/StatCard'
 
 interface CreateUserData {
@@ -22,7 +23,8 @@ export default function UsersAdminPage() {
    const [searchTerm, setSearchTerm] = useState('')
    const [showModal, setShowModal] = useState(false)
    const [isSubmitting, setIsSubmitting] = useState(false)
-   const { showToast } = useToast()
+    const { showToast } = useToast()
+    const { confirm, dialog } = useConfirm()
 
    const [formData, setFormData] = useState<CreateUserData>({
      username: '',
@@ -59,14 +61,22 @@ export default function UsersAdminPage() {
    }
 
     const handleDelete = async (id: number) => {
-      if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.")) return
-      try {
-        await deleteUser(id)
-        setUsers(users.filter(u => u.id !== id))
-        showToast('success', 'Supprimé', 'Utilisateur supprimé avec succès.')
-      } catch (err) {
-        showToast('error', 'Erreur', 'Échec de la suppression.')
-      }
+      confirm({
+        message: "Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.",
+        title: 'Suppression',
+        variant: 'danger',
+        confirmText: 'Supprimer',
+        cancelText: 'Annuler',
+        onConfirm: async () => {
+          try {
+            await deleteUser(id)
+            setUsers(users.filter(u => u.id !== id))
+            showToast('success', 'Supprimé', 'Utilisateur supprimé avec succès.')
+          } catch (err) {
+            showToast('error', 'Erreur', 'Échec de la suppression.')
+          }
+        },
+      })
     }
 
     const filteredUsers = users.filter(u =>
@@ -80,7 +90,8 @@ export default function UsersAdminPage() {
    const activityRate = totalUsers > 0 ? Math.round((activeUsers / totalUsers) * 100) : 0
 
    return (
-     <div className="space-y-8 p-6">
+      <div className="space-y-8 p-6">
+        {dialog}
        <motion.div
          initial={{ opacity: 0, y: -20 }}
          animate={{ opacity: 1, y: 0 }}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link as LinkIcon, Plus, Calendar, X, Edit3, Trash2, ExternalLink, Globe, Search } from 'lucide-react';
 import { useToast } from '../../components/ToastProvider';
+import { useConfirm } from '../../hooks/useConfirm';
 import { fetchApplicationLinks, deleteApplicationLink, createApplicationLink, updateApplicationLink, fetchApplicationLinksByApplication, fetchApplicationLinkById } from '../../api/applicationLinkApi';
 import { fetchApplications } from '../../api/applicationApi';
 import { ApplicationLink, ApplicationLinkForm } from '../../types/applicationLinkTypes';
@@ -25,6 +26,7 @@ export default function ApplicationLinksPage() {
   const [showLinkForm, setShowLinkForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { showToast } = useToast();
+  const { confirm, dialog } = useConfirm();
   
   const [editingLink, setEditingLink] = useState<ApplicationLink | null>(null);
   const [showEditLinkModal, setShowEditLinkModal] = useState(false);
@@ -89,15 +91,22 @@ export default function ApplicationLinksPage() {
   };
 
   const handleDeleteLink = async (linkId: number) => {
-    if (!window.confirm('Supprimer ce lien ?')) return;
-    
-    try {
-      await deleteApplicationLink(linkId);
-      setLinks(links.filter(link => link.id !== linkId));
-      showToast('success', 'Lien supprimé', 'Le lien a été supprimé avec succès.');
-    } catch (error: any) {
-      handleApiError(error, 'suppression');
-    }
+    confirm({
+      message: 'Supprimer ce lien ?',
+      title: 'Suppression',
+      variant: 'danger',
+      confirmText: 'Supprimer',
+      cancelText: 'Annuler',
+      onConfirm: async () => {
+        try {
+          await deleteApplicationLink(linkId);
+          setLinks(links.filter(link => link.id !== linkId));
+          showToast('success', 'Lien supprimé', 'Le lien a été supprimé avec succès.');
+        } catch (error: any) {
+          handleApiError(error, 'suppression');
+        }
+      },
+    });
   };
 
   const handleEditLink = (link: ApplicationLink) => {
@@ -251,6 +260,7 @@ export default function ApplicationLinksPage() {
 
   return (
     <div className="space-y-8 p-6">
+      {dialog}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

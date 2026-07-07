@@ -4,12 +4,14 @@ import { motion } from 'framer-motion'
 import { fetchDocumentById, deleteDocument, DocumentArchive } from '../../../api/documentArchiveApi'
 import { Loader2, Eye, Download, Trash2, X, FileText, HardDrive, Calendar, User, Tag, ArrowLeft } from 'lucide-react'
 import { useToast } from '../../../components/ToastProvider'
+import { useConfirm } from '../../../hooks/useConfirm'
 import { formatFileSize } from '../../../utils/fileSizeFormatter'
 
 export default function DocumentDetailPage() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const { showToast } = useToast()
+  const { confirm, dialog } = useConfirm()
   const [doc, setDoc] = useState<DocumentArchive | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -31,16 +33,24 @@ export default function DocumentDetailPage() {
     loadDocument()
   }, [id])
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!doc) return
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce document ? Cette action est irréversible.')) return
-    try {
-      await deleteDocument(doc.id!)
-      showToast('success', 'Supprimé', 'Document supprimé avec succès.')
-      navigate('/document-archive')
-    } catch {
-      showToast('error', 'Erreur', 'Échec de la suppression.')
-    }
+    confirm({
+      message: 'Êtes-vous sûr de vouloir supprimer ce document ? Cette action est irréversible.',
+      title: 'Suppression',
+      variant: 'danger',
+      confirmText: 'Supprimer',
+      cancelText: 'Annuler',
+      onConfirm: async () => {
+        try {
+          await deleteDocument(doc.id!)
+          showToast('success', 'Supprimé', 'Document supprimé avec succès.')
+          navigate('/document-archive')
+        } catch {
+          showToast('error', 'Erreur', 'Échec de la suppression.')
+        }
+      },
+    })
   }
 
   const getDocumentTypeInfo = (contentType: string) => {
@@ -102,6 +112,7 @@ export default function DocumentDetailPage() {
 
   return (
     <div className="space-y-6 p-6">
+      {dialog}
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigate('/document-archive')}

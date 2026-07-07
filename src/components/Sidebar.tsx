@@ -17,6 +17,7 @@ import {
   PanelLeftOpen,
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import logo from '../assets/images/WhatsApp Image 2026-07-07 at 16.40.43.jpeg'
 
 const baseMenuItems = [
   { label: 'Tableau de bord', to: '/', icon: LayoutDashboard },
@@ -53,8 +54,8 @@ export default function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
     <aside className={`fixed left-0 top-0 z-20 hidden h-screen flex-col border-r-2 border-slate-200 bg-white backdrop-blur-xl transition-colors duration-300 dark:border-slate-800 dark:bg-slate-950 md:flex ${collapsed ? 'w-16' : 'w-72'}`}>
       <div className="flex flex-col h-full" style={{ paddingTop: '17px' }}>
         <div className={`flex items-center gap-3 px-4 py-4 border-b-2 border-slate-200 bg-white shadow-md transition-colors duration-300 dark:border-slate-800 dark:bg-slate-950 ${collapsed ? 'justify-center' : ''}`}>
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">
-            <ShieldCheck className="h-5 w-5" />
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl">
+            <img src={logo} alt="Logo" className="h-full w-full object-cover" />
           </div>
           {!collapsed && (
             <div>

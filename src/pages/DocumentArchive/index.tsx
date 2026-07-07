@@ -11,6 +11,7 @@ import {
 } from '../../api/documentArchiveApi'
 import { Loader2, Plus, Search, X, Trash2, Eye, Download, FileText, FolderOpen, HardDrive, Calendar, User, Tag, ChevronLeft, ChevronRight, Upload } from 'lucide-react'
 import { useToast } from '../../components/ToastProvider'
+import { useConfirm } from '../../hooks/useConfirm'
 import { usePagination } from '../../hooks/usePagination'
 import { formatFileSize } from '../../utils/fileSizeFormatter'
 import { DOCUMENT_CATEGORIES } from '../../utils/documentCategories'
@@ -20,6 +21,7 @@ const ITEMS_PER_PAGE = 20
 export default function DocumentArchivePage() {
   const navigate = useNavigate()
   const { showToast } = useToast()
+  const { confirm, dialog } = useConfirm()
   const [documents, setDocuments] = useState<DocumentArchive[]>([])
   const [pageResponse, setPageResponse] = useState<PageResponse<DocumentArchive> | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -89,25 +91,33 @@ export default function DocumentArchivePage() {
   }, [])
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce document ? Cette action est irréversible.')) return
-    try {
-      await deleteDocument(id)
-      if (useBackendSearch) {
-        setDocuments(documents.filter(d => d.id !== id))
-      } else if (useBackendCategory) {
-        setDocuments(documents.filter(d => d.id !== id))
-      } else if (pageResponse) {
-        setDocuments(pageResponse.content.filter(d => d.id !== id))
-        setPageResponse({
-          ...pageResponse,
-          content: pageResponse.content.filter(d => d.id !== id),
-          totalElements: pageResponse.totalElements - 1,
-        })
-      }
-      showToast('success', 'Supprimé', 'Document supprimé avec succès.')
-    } catch {
-      showToast('error', 'Erreur', 'Échec de la suppression.')
-    }
+    confirm({
+      message: 'Êtes-vous sûr de vouloir supprimer ce document ? Cette action est irréversible.',
+      title: 'Suppression',
+      variant: 'danger',
+      confirmText: 'Supprimer',
+      cancelText: 'Annuler',
+      onConfirm: async () => {
+        try {
+          await deleteDocument(id)
+          if (useBackendSearch) {
+            setDocuments(documents.filter(d => d.id !== id))
+          } else if (useBackendCategory) {
+            setDocuments(documents.filter(d => d.id !== id))
+          } else if (pageResponse) {
+            setDocuments(pageResponse.content.filter(d => d.id !== id))
+            setPageResponse({
+              ...pageResponse,
+              content: pageResponse.content.filter(d => d.id !== id),
+              totalElements: pageResponse.totalElements - 1,
+            })
+          }
+          showToast('success', 'Supprimé', 'Document supprimé avec succès.')
+        } catch {
+          showToast('error', 'Erreur', 'Échec de la suppression.')
+        }
+      },
+    })
   }
 
   const paginatedItems = useMemo(() => {
@@ -167,6 +177,7 @@ export default function DocumentArchivePage() {
 
   return (
     <div className="space-y-8 p-6">
+      {dialog}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

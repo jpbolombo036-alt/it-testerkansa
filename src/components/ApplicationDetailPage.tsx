@@ -7,11 +7,13 @@ import { fetchAccounts, Account } from '../api/accountApi';
 import { ApplicationLink } from '../types/applicationLinkTypes';
 import { Loader2, Edit3, Trash2, X, Package, Globe, User as UserIcon, ExternalLink, Calendar, Eye } from 'lucide-react';
 import { useToast } from '../components/ToastProvider';
+import { useConfirm } from '../hooks/useConfirm';
 
 export const ApplicationDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { confirm, dialog } = useConfirm();
 
   const [app, setApp] = useState<Application | null>(null);
   const [appLinks, setAppLinks] = useState<ApplicationLink[]>([]);
@@ -58,18 +60,27 @@ export const ApplicationDetailPage: React.FC = () => {
     loadRelated();
   }, [id, app]);
 
-  const handleDelete = async () => {
-    if (!app?.id || !window.confirm('Supprimer cette application ?')) return;
-    setDeleting(true);
-    try {
-      await deleteApplication(app.id);
-      showToast('success', 'Application supprimée', 'L\'application a été supprimée avec succès.');
-      navigate('/applications');
-    } catch {
-      showToast('error', 'Erreur', 'Impossible de supprimer l\'application.');
-    } finally {
-      setDeleting(false);
-    }
+  const handleDelete = () => {
+    if (!app?.id) return;
+    confirm({
+      message: 'Supprimer cette application ?',
+      title: 'Suppression',
+      variant: 'danger',
+      confirmText: 'Supprimer',
+      cancelText: 'Annuler',
+      onConfirm: async () => {
+        setDeleting(true);
+        try {
+          await deleteApplication(app.id);
+          showToast('success', 'Application supprimée', 'L\'application a été supprimée avec succès.');
+          navigate('/applications');
+        } catch {
+          showToast('error', 'Erreur', 'Impossible de supprimer l\'application.');
+        } finally {
+          setDeleting(false);
+        }
+      },
+    });
   };
 
   if (loading) {
@@ -84,6 +95,7 @@ export const ApplicationDetailPage: React.FC = () => {
 
   return (
     <div className="space-y-6 p-6">
+      {dialog}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

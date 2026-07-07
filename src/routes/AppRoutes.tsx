@@ -1,107 +1,109 @@
-import React from 'react'
+import React, { Suspense, lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import ProtectedRoute from '../components/ProtectedRoute'
 import AdminRoute from '../components/AdminRoute'
 import FeatureRoute from '../components/FeatureRoute'
-import Dashboard from '../pages/Dashboard'
-import Login from '../pages/Login'
-import UsersAdminPage from '../pages/Users'
-import ApplicationsPage from '../pages/Applications'
-import ApplicationLinksPage from '../pages/ApplicationLinks'
-import ComptesPage from '../pages/comptes'
-import TestsPage from '../pages/Tests'
-import TachesPage from '../pages/Taches'
-import MessagesPage from '../pages/Messages'
-import RapportsPage from '../pages/Rapports'
-import ProfilPage from '../pages/Profil'
-import NotificationsPage from '../pages/Notifications'
-import NotFoundPage from '../pages/NotFound'
+import LoadingFallback from '../components/LoadingFallback'
 import MainLayout from '../layouts/MainLayout'
-import { ApplicationDetailPage } from '../components/ApplicationDetailPage'
-import { AccountDetailPage } from '../components/AccountDetailPage'
-import ApplicationCreatePage from '../pages/Applications/create'
-import CompteCreatePage from '../pages/comptes/create'
-import TestSessionCreatePage from '../pages/Tests/create'
-import TestCreatePage from '../pages/Tests/TestCreatePage'
-import TacheCreatePage from '../pages/Taches/create'
-import ApplicationLinkCreatePage from '../pages/ApplicationLinks/create'
-import ApplicationLinkEditPage from '../pages/ApplicationLinks/[id]/edit'
-import UserCreatePage from '../pages/Users/create'
-import BlocNotesPageWrapper from '../pages/BlocNotes'
-import UserEditPage from '../pages/Users/[id]/edit'
-import ApplicationEditPage from '../pages/Applications/[id]/edit'
-import CompteEditPage from '../pages/comptes/[id]/edit'
-import TacheEditPage from '../pages/Taches/[id]/edit'
-import TestSessionEditPage from '../pages/Tests/[id]/edit'
-import PresencesPage from '../pages/Presences'
-import DocumentArchivePage from '../pages/DocumentArchive'
-import DocumentDetailPage from '../pages/DocumentArchive/[id]'
-import DocumentPreviewPage from '../pages/DocumentArchive/[id]/preview'
-import DocumentUploadPage from '../pages/DocumentArchive/upload'
+
+const Dashboard = lazy(() => import('../pages/Dashboard'))
+const Login = lazy(() => import('../pages/Login'))
+const UsersAdminPage = lazy(() => import('../pages/Users'))
+const ApplicationsPage = lazy(() => import('../pages/Applications'))
+const ApplicationLinksPage = lazy(() => import('../pages/ApplicationLinks'))
+const ComptesPage = lazy(() => import('../pages/comptes'))
+const TestsPage = lazy(() => import('../pages/Tests'))
+const TachesPage = lazy(() => import('../pages/Taches'))
+const MessagesPage = lazy(() => import('../pages/Messages'))
+const RapportsPage = lazy(() => import('../pages/Rapports'))
+const ProfilPage = lazy(() => import('../pages/Profil'))
+const NotificationsPage = lazy(() => import('../pages/Notifications'))
+const NotFoundPage = lazy(() => import('../pages/NotFound'))
+const ApplicationDetailPage = lazy(() => import('../components/ApplicationDetailPage').then(module => ({ default: module.ApplicationDetailPage })))
+const AccountDetailPage = lazy(() => import('../components/AccountDetailPage').then(module => ({ default: module.AccountDetailPage })))
+const ApplicationCreatePage = lazy(() => import('../pages/Applications/create'))
+const CompteCreatePage = lazy(() => import('../pages/comptes/create'))
+const TestSessionCreatePage = lazy(() => import('../pages/Tests/create'))
+const TestCreatePage = lazy(() => import('../pages/Tests/TestCreatePage'))
+const TacheCreatePage = lazy(() => import('../pages/Taches/create'))
+const ApplicationLinkCreatePage = lazy(() => import('../pages/ApplicationLinks/create'))
+const ApplicationLinkEditPage = lazy(() => import('../pages/ApplicationLinks/[id]/edit'))
+const UserCreatePage = lazy(() => import('../pages/Users/create'))
+const BlocNotesPageWrapper = lazy(() => import('../pages/BlocNotes'))
+const UserEditPage = lazy(() => import('../pages/Users/[id]/edit'))
+const ApplicationEditPage = lazy(() => import('../pages/Applications/[id]/edit'))
+const CompteEditPage = lazy(() => import('../pages/comptes/[id]/edit'))
+const TacheEditPage = lazy(() => import('../pages/Taches/[id]/edit'))
+const TestSessionEditPage = lazy(() => import('../pages/Tests/[id]/edit'))
+const PresencesPage = lazy(() => import('../pages/Presences'))
+const DocumentArchivePage = lazy(() => import('../pages/DocumentArchive'))
+const DocumentDetailPage = lazy(() => import('../pages/DocumentArchive/[id]'))
+const DocumentPreviewPage = lazy(() => import('../pages/DocumentArchive/[id]/preview'))
+const DocumentUploadPage = lazy(() => import('../pages/DocumentArchive/upload'))
 
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
+      <Route path="/login" element={<Suspense fallback={<LoadingFallback />}><Login /></Suspense>} />
 
       <Route element={<ProtectedRoute />}>
         <Route element={<MainLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/applications" element={<ApplicationsPage />} />
-          <Route path="/applications/new" element={<ApplicationCreatePage />} />
-          <Route path="/applications/:id/edit" element={<ApplicationEditPage />} />
-          <Route path="/applications/:id" element={<ApplicationDetailPage />} />
-          <Route path="/application-links" element={<ApplicationLinksPage />} />
-          <Route path="/application-links/new" element={<ApplicationLinkCreatePage />} />
-          <Route path="/application-links/:id/edit" element={<ApplicationLinkEditPage />} />
-          <Route path="/comptes" element={<ComptesPage />} />
-          <Route path="/comptes/new" element={<CompteCreatePage />} />
-          <Route path="/comptes/:id/edit" element={<CompteEditPage />} />
-          <Route path="/comptes/:id" element={<AccountDetailPage />} />
-          <Route path="/tests" element={<TestsPage />} />
-          <Route path="/tests/new" element={<TestSessionCreatePage />} />
-          <Route path="/tests/test/new" element={<TestCreatePage />} />
-          <Route path="/tests/:id/edit" element={<TestSessionEditPage />} />
-          <Route path="/taches" element={<TachesPage />} />
-          <Route path="/taches/new" element={<TacheCreatePage />} />
-          <Route path="/taches/:id/edit" element={<TacheEditPage />} />
+          <Route path="/dashboard" element={<Suspense fallback={<LoadingFallback />}><Dashboard /></Suspense>} />
+          <Route path="/applications" element={<Suspense fallback={<LoadingFallback />}><ApplicationsPage /></Suspense>} />
+          <Route path="/applications/new" element={<Suspense fallback={<LoadingFallback />}><ApplicationCreatePage /></Suspense>} />
+          <Route path="/applications/:id/edit" element={<Suspense fallback={<LoadingFallback />}><ApplicationEditPage /></Suspense>} />
+          <Route path="/applications/:id" element={<Suspense fallback={<LoadingFallback />}><ApplicationDetailPage /></Suspense>} />
+          <Route path="/application-links" element={<Suspense fallback={<LoadingFallback />}><ApplicationLinksPage /></Suspense>} />
+          <Route path="/application-links/new" element={<Suspense fallback={<LoadingFallback />}><ApplicationLinkCreatePage /></Suspense>} />
+          <Route path="/application-links/:id/edit" element={<Suspense fallback={<LoadingFallback />}><ApplicationLinkEditPage /></Suspense>} />
+          <Route path="/comptes" element={<Suspense fallback={<LoadingFallback />}><ComptesPage /></Suspense>} />
+          <Route path="/comptes/new" element={<Suspense fallback={<LoadingFallback />}><CompteCreatePage /></Suspense>} />
+          <Route path="/comptes/:id/edit" element={<Suspense fallback={<LoadingFallback />}><CompteEditPage /></Suspense>} />
+          <Route path="/comptes/:id" element={<Suspense fallback={<LoadingFallback />}><AccountDetailPage /></Suspense>} />
+          <Route path="/tests" element={<Suspense fallback={<LoadingFallback />}><TestsPage /></Suspense>} />
+          <Route path="/tests/new" element={<Suspense fallback={<LoadingFallback />}><TestSessionCreatePage /></Suspense>} />
+          <Route path="/tests/test/new" element={<Suspense fallback={<LoadingFallback />}><TestCreatePage /></Suspense>} />
+          <Route path="/tests/:id/edit" element={<Suspense fallback={<LoadingFallback />}><TestSessionEditPage /></Suspense>} />
+          <Route path="/taches" element={<Suspense fallback={<LoadingFallback />}><TachesPage /></Suspense>} />
+          <Route path="/taches/new" element={<Suspense fallback={<LoadingFallback />}><TacheCreatePage /></Suspense>} />
+          <Route path="/taches/:id/edit" element={<Suspense fallback={<LoadingFallback />}><TacheEditPage /></Suspense>} />
           <Route path="/users" element={
             <AdminRoute>
-              <UsersAdminPage />
+              <Suspense fallback={<LoadingFallback />}><UsersAdminPage /></Suspense>
             </AdminRoute>
           } />
           <Route path="/users/new" element={
             <AdminRoute>
-              <UserCreatePage />
+              <Suspense fallback={<LoadingFallback />}><UserCreatePage /></Suspense>
             </AdminRoute>
           } />
           <Route path="/users/:id/edit" element={
             <AdminRoute>
-              <UserEditPage />
+              <Suspense fallback={<LoadingFallback />}><UserEditPage /></Suspense>
             </AdminRoute>
           } />
-          <Route path="/bloc-notes" element={<BlocNotesPageWrapper />} />
-          <Route path="/bloc-notes/new" element={<BlocNotesPageWrapper />} />
-          <Route path="/bloc-notes/:id" element={<BlocNotesPageWrapper />} />
-          <Route path="/bloc-notes/:id/edit" element={<BlocNotesPageWrapper />} />
-          <Route path="/messages" element={<MessagesPage />} />
+          <Route path="/bloc-notes" element={<Suspense fallback={<LoadingFallback />}><BlocNotesPageWrapper /></Suspense>} />
+          <Route path="/bloc-notes/new" element={<Suspense fallback={<LoadingFallback />}><BlocNotesPageWrapper /></Suspense>} />
+          <Route path="/bloc-notes/:id" element={<Suspense fallback={<LoadingFallback />}><BlocNotesPageWrapper /></Suspense>} />
+          <Route path="/bloc-notes/:id/edit" element={<Suspense fallback={<LoadingFallback />}><BlocNotesPageWrapper /></Suspense>} />
+          <Route path="/messages" element={<Suspense fallback={<LoadingFallback />}><MessagesPage /></Suspense>} />
           
-          <Route path="/document-archive" element={<FeatureRoute feature="documentArchiveEnabled"><DocumentArchivePage /></FeatureRoute>} />
-          <Route path="/document-archive/upload" element={<DocumentUploadPage />} />
-          <Route path="/document-archive/:id" element={<DocumentDetailPage />} />
-          <Route path="/document-archive/:id/preview" element={<DocumentPreviewPage />} />
-          <Route path="/rapports" element={<RapportsPage />} />
+          <Route path="/document-archive" element={<FeatureRoute feature="documentArchiveEnabled"><Suspense fallback={<LoadingFallback />}><DocumentArchivePage /></Suspense></FeatureRoute>} />
+          <Route path="/document-archive/upload" element={<Suspense fallback={<LoadingFallback />}><DocumentUploadPage /></Suspense>} />
+          <Route path="/document-archive/:id" element={<Suspense fallback={<LoadingFallback />}><DocumentDetailPage /></Suspense>} />
+          <Route path="/document-archive/:id/preview" element={<Suspense fallback={<LoadingFallback />}><DocumentPreviewPage /></Suspense>} />
+          <Route path="/rapports" element={<Suspense fallback={<LoadingFallback />}><RapportsPage /></Suspense>} />
           <Route path="/presences" element={
             <AdminRoute>
-              <FeatureRoute feature="presencesEnabled"><PresencesPage /></FeatureRoute>
+              <FeatureRoute feature="presencesEnabled"><Suspense fallback={<LoadingFallback />}><PresencesPage /></Suspense></FeatureRoute>
             </AdminRoute>
           } />
-          <Route path="/profil" element={<ProfilPage />} />
-          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/profil" element={<Suspense fallback={<LoadingFallback />}><ProfilPage /></Suspense>} />
+          <Route path="/notifications" element={<Suspense fallback={<LoadingFallback />}><NotificationsPage /></Suspense>} />
         </Route>
       </Route>
 
-      <Route path="/404" element={<NotFoundPage />} />
+      <Route path="/404" element={<Suspense fallback={<LoadingFallback />}><NotFoundPage /></Suspense>} />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>

@@ -38,6 +38,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsChecking(false)
     }
     checkSession()
+
+    const handleSessionExpired = () => {
+      localStorage.removeItem('token')
+      setUser(null)
+      setIsAuthenticated(false)
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('session-expired', handleSessionExpired as EventListener)
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('session-expired', handleSessionExpired as EventListener)
+      }
+    }
   }, [])
 
   const login = useCallback(async (username: string, password: string) => {
@@ -84,7 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [])
 
   if (isChecking && localStorage.getItem('token')) {
-    return <div className="flex h-screen items-center justify-center bg-slate-950 text-white">Vérification de la session...</div>
+    return <div className="flex h-screen items-center justify-center bg-slate-950" />
   }
 
   return (

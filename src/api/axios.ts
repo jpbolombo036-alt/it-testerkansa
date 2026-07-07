@@ -24,6 +24,9 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+type RejectCustom = (reason: Error) => void;
+let pending401Reject: RejectCustom | null = null;
+
 api.interceptors.response.use(
   (response) => {
     const contentType = response.headers['content-type'];
@@ -33,8 +36,25 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
-       console.warn("Accès refusé : identifiants incorrects.");
+    const status = error.response?.status;
+
+    if (status === 401 || status === 403) {
+      if (pending401Reject) {
+        return;
+      }
+      try {
+        localStorage.removeItem('token');
+        if (pending401Reject) {
+          (pending401Reject as RejectCustom)(new Error('Session expirée, veuillez vous reconnecter.'));
+        }
+      } catch {
+        // ignore
+      } finally {
+        pending401Reject = null;
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('session-expired'));
+        }
+      }
     }
     return Promise.reject(error);
   }

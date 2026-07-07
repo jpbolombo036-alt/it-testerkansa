@@ -29,6 +29,8 @@ export default function DashboardPage() {
   const [userTestsEnCours, setUserTestsEnCours] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
 
+  const [error, setError] = useState<string | null>(null)
+
   useEffect(() => {
     Promise.all([
       fetchDashboardStats().catch(err => { console.error("Stats error:", err); return null; }),
@@ -38,6 +40,8 @@ export default function DashboardPage() {
       .then(([statsData, usersData, testsData]) => {
         if (statsData) {
           setStats(statsData);
+        } else {
+          setError('Impossible de charger les statistiques.')
         }
 
         // Calcul de la performance réelle basée sur les données de l'application
@@ -100,7 +104,19 @@ export default function DashboardPage() {
     )
   }
 
-  if (!stats) return null
+  if (error || !stats) {
+    return (
+      <div className="rounded-[2.5rem] bg-white p-6 shadow-soft dark:bg-slate-900">
+        <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Tableau de bord</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{error || 'Aucune donnée disponible pour le moment.'}</p>
+          <button onClick={() => window.location.reload()} className="rounded-2xl bg-sky-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-sky-700">
+            Réessayer
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6 p-6">

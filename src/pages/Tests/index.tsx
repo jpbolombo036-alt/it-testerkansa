@@ -7,22 +7,25 @@ import { fetchUsers, User } from '../../api/userApi'
 import { CheckCircle, XCircle, Bug as BugIcon, Loader2, ClipboardCheck, Plus, Calendar, X, Lock, Unlock, Eye, FileText, Edit3, Download, Trash2, Search, User as UserIcon, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../components/ToastProvider' // Import useToast
+import { useConfirm } from '../../hooks/useConfirm'
 
 export default function TestsPage() {
    const navigate = useNavigate()
    const [searchParams] = useSearchParams()
    const { user } = useAuth()
-   const { showToast } = useToast() // Initialize useToast
+    const { showToast } = useToast() // Initialize useToast
+    const { confirm, dialog } = useConfirm()
    const [sessions, setSessions] = useState<TestSession[]>([])
    const [isLoading, setIsLoading] = useState(true)
    const [showSessionForm, setShowSessionForm] = useState(false)
    const [showTestForm, setShowTestForm] = useState(false)
    const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null)
    const [selectedSessionTests, setSelectedSessionTests] = useState<TestStep[]>([])
-   const [isSubmitting, setIsSubmitting] = useState(false)
-    const [reportingBugFor, setReportingBugFor] = useState<number | null>(null)
-    const [bugDescription, setBugDescription] = useState('')
-    const [closingSessionId, setClosingSessionId] = useState<number | null>(null)
+    const [isSubmitting, setIsSubmitting] = useState(false)
+     const [reportingBugFor, setReportingBugFor] = useState<number | null>(null)
+     const [bugDescription, setBugDescription] = useState('')
+     const [closingSessionId, setClosingSessionId] = useState<number | null>(null)
+     const [error, setError] = useState<string | null>(null)
 
     const getSessionStatus = (session: TestSession) => (session.statut && session.statut.toUpperCase() === SESSION_STATUS_CLOSED) ? SESSION_STATUS_CLOSED : SESSION_STATUS_OPEN
    
@@ -63,27 +66,43 @@ const [editingTest, setEditingTest] = useState<TestStep | null>(null)
      setShowEditModal(true)
    }
    
-const handleDeleteTest = async (testId: number) => {
-      if (!window.confirm("Supprimer ce test ?")) return
-      try {
-        await deleteTest(testId)
-        setSelectedSessionTests(selectedSessionTests.filter(t => t.id !== testId))
-        showToast('success', 'Test supprimé', 'Le test a été supprimé avec succès.')
-      } catch {
-        showToast('error', 'Erreur', 'Impossible de supprimer le test.')
-      }
-    }
-    
-    const handleDeleteSession = async (sessionId: number) => {
-      if (!window.confirm("Supprimer cette session ?")) return
-      try {
-        await deleteTestSession(sessionId)
-        setSessions(sessions.filter(s => s.id !== sessionId))
-        showToast('success', 'Session supprimée', 'La session de test a été supprimée avec succès.')
-      } catch {
-        showToast('error', 'Erreur', 'Impossible de supprimer la session.')
-      }
-    }
+ const handleDeleteTest = async (testId: number) => {
+       confirm({
+         message: "Supprimer ce test ?",
+         title: 'Suppression',
+         variant: 'danger',
+         confirmText: 'Supprimer',
+         cancelText: 'Annuler',
+         onConfirm: async () => {
+           try {
+             await deleteTest(testId)
+             setSelectedSessionTests(selectedSessionTests.filter(t => t.id !== testId))
+             showToast('success', 'Test supprimé', 'Le test a été supprimé avec succès.')
+           } catch {
+             showToast('error', 'Erreur', 'Impossible de supprimer le test.')
+           }
+         },
+       })
+     }
+
+     const handleDeleteSession = async (sessionId: number) => {
+       confirm({
+         message: "Supprimer cette session ?",
+         title: 'Suppression',
+         variant: 'danger',
+         confirmText: 'Supprimer',
+         cancelText: 'Annuler',
+         onConfirm: async () => {
+           try {
+             await deleteTestSession(sessionId)
+             setSessions(sessions.filter(s => s.id !== sessionId))
+             showToast('success', 'Session supprimée', 'La session de test a été supprimée avec succès.')
+           } catch {
+             showToast('error', 'Erreur', 'Impossible de supprimer la session.')
+           }
+         },
+       })
+     }
 
     const handleRequestCloseSession = async (sessionId: number) => {
       try {
@@ -208,17 +227,19 @@ const sessionIdFromQuery = searchParams.get('session')
       }
     }
     
-    const loadSessions = async () => {
-      try {
-        setIsLoading(true)
-        const data = await fetchTestSessions()
-        setSessions(data)
-      } catch (err) {
-        console.error("Erreur chargement sessions", err)
-      } finally {
-        setIsLoading(false)
-      }
-    }
+     const loadSessions = async () => {
+       try {
+         setIsLoading(true)
+         setError(null)
+         const data = await fetchTestSessions()
+         setSessions(data)
+       } catch (err) {
+         console.error("Erreur chargement sessions", err)
+         setError("Impossible de charger les sessions de test.")
+       } finally {
+         setIsLoading(false)
+       }
+     }
     
     const sortedSessions = useMemo(() => {
       return [...sessions].sort((a, b) => {
@@ -377,12 +398,27 @@ const handleCreateTestInSession = async (e: React.FormEvent) => {
       )
     }
 
+    if (error) {
+      return (
+        <div className="rounded-[2.5rem] bg-white p-6 shadow-soft dark:bg-slate-900">
+          <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Sessions de Test</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{error}</p>
+            <button onClick={loadSessions} className="rounded-2xl bg-sky-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-sky-700">
+              Réessayer
+            </button>
+          </div>
+        </div>
+      )
+    }
+
     const currentSession = selectedSessionId === null ? null : sessions.find(session => session.id === selectedSessionId)
     const currentSessionStatus = currentSession ? getSessionStatus(currentSession) : SESSION_STATUS_OPEN
     const isAdmin = user?.role === 'admin'
 
     return (
 <div className="space-y-8 p-6">
+        {dialog}
         {selectedSessionId === null && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}

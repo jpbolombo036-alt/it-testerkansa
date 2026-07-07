@@ -5,6 +5,7 @@ import { fetchApplications, createApplication, deleteApplication, Application, A
 import { Loader2, Layers, Plus, Calendar, X, Edit3, Trash2, Package, Eye, ChevronLeft, ChevronRight, Search } from 'lucide-react'
 import { useToast } from '../../components/ToastProvider'
 import { usePagination } from '../../hooks/usePagination'
+import ConfirmDialog, { type ConfirmOptions } from '../../components/ConfirmDialog'
 
 const ITEMS_PER_PAGE = 25
 
@@ -12,9 +13,15 @@ export default function ApplicationsPage() {
    const navigate = useNavigate()
    const [applications, setApplications] = useState<Application[]>([])
    const [isLoading, setIsLoading] = useState(true)
+   const [error, setError] = useState<string | null>(null)
    const [showApplicationForm, setShowApplicationForm] = useState(false)
-   const [isSubmitting, setIsSubmitting] = useState(false)
-   const { showToast } = useToast()
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [confirmDelete, setConfirmDelete] = useState<ConfirmOptions & { open: boolean; onConfirm: () => void }>({
+      open: false,
+      message: '',
+      onConfirm: () => {},
+    })
+    const { showToast } = useToast()
 const [searchTerm, setSearchTerm] = useState('')
 
     const [applicationFormData, setApplicationFormData] = useState<ApplicationCreateData>({
@@ -39,10 +46,12 @@ const [searchTerm, setSearchTerm] = useState('')
    const loadApplications = async () => {
      try {
        setIsLoading(true)
+       setError(null)
        const data = await fetchApplications()
        setApplications(data)
      } catch (err) {
        console.error("Erreur chargement applications", err)
+       setError("Impossible de charger la liste des applications.")
      } finally {
        setIsLoading(false)
      }
@@ -60,7 +69,7 @@ const [searchTerm, setSearchTerm] = useState('')
         setApplications([newApplication, ...applications])
         setShowApplicationForm(false)
         setApplicationFormData({ nom: '', description: '', version: '', environnement: 'PRODUCTION' })
-        showToast('success', 'Application crÃ©Ã©e', 'La nouvelle application a Ã©tÃ© ajoutÃ©e avec succÃ¨s.')
+        showToast('success', 'Application créée', 'La nouvelle application a été ajoutée avec succès.')
       } catch (error) {
         showToast('error', 'Erreur', "Erreur lors de la crÃ©ation de l'application.")
       } finally {
@@ -69,20 +78,45 @@ const [searchTerm, setSearchTerm] = useState('')
     }
 
    const handleDeleteApplication = async (appId: number) => {
-     if (!window.confirm("Supprimer cette application ?")) return
-    try {
-       await deleteApplication(appId)
-       setApplications(applications.filter(app => app.id !== appId))
-       showToast('success', 'Application supprimÃ©e', "L'application a Ã©tÃ© supprimÃ©e avec succÃ¨s.")
-    } catch (error) {
-       showToast('error', 'Erreur', "Erreur lors de la suppression de l'application.")
+      setConfirmDelete({
+        open: true,
+        message: 'Supprimer cette application ?',
+        title: 'Suppression',
+        variant: 'danger',
+        confirmText: 'Supprimer',
+        cancelText: 'Annuler',
+        onConfirm: async () => {
+          try {
+            await deleteApplication(appId)
+            setApplications(applications.filter(app => app.id !== appId))
+            showToast('success', 'Application supprimée', "L'application a été supprimée avec succès.")
+          } catch (error) {
+            showToast('error', 'Erreur', "Erreur lors de la suppression de l'application.")
+          } finally {
+            setConfirmDelete(c => ({ ...c, open: false }))
+          }
+        },
+      })
     }
-   }
 
    if (isLoading) {
      return (
        <div className="flex h-96 items-center justify-center">
          <Loader2 className="h-10 w-10 animate-spin text-sky-600" />
+       </div>
+     )
+   }
+
+   if (error) {
+     return (
+       <div className="rounded-[2.5rem] bg-white p-6 shadow-md dark:bg-slate-900">
+         <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+           <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Applications</p>
+           <p className="text-sm text-slate-500 dark:text-slate-400">{error}</p>
+           <button onClick={loadApplications} className="rounded-2xl bg-sky-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-sky-700">
+             Réessayer
+           </button>
+         </div>
        </div>
      )
    }
@@ -344,9 +378,19 @@ className="rounded-[2.5rem] bg-white p-6 shadow-md dark:bg-slate-900"
                </button>
              </div>
            </motion.div>
-         ))}
-       </div>
-     </div>
-   )
- }
+          ))}
+        </div>
+        <ConfirmDialog
+          open={confirmDelete.open}
+          title={confirmDelete.title}
+          message={confirmDelete.message}
+          confirmText={confirmDelete.confirmText}
+          cancelText={confirmDelete.cancelText}
+          variant={confirmDelete.variant}
+          onConfirm={confirmDelete.onConfirm}
+          onCancel={() => setConfirmDelete(c => ({ ...c, open: false }))}
+        />
+      </div>
+    )
+  }
 

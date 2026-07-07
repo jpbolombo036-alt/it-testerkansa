@@ -1,4 +1,4 @@
-import { ShieldCheck, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { motion } from 'framer-motion'
 import React, { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
@@ -56,19 +56,19 @@ export default function HeroBanner() {
         </div>
 
       <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="relative flex h-40 w-full items-center justify-center rounded-[2rem] border border-white/10 bg-white/10 p-6 shadow-soft backdrop-blur-md sm:h-48 lg:w-[280px] xl:w-[320px]"
-        >
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 text-white shadow-xl sm:h-20 sm:w-20">
-            <ShieldCheck className="h-8 w-8 sm:h-10 sm:w-10" />
-          </div>
-          <div className="absolute bottom-4 left-4 rounded-3xl bg-white/15 px-3 py-2 text-xs text-slate-100 shadow-inner sm:bottom-6 sm:left-6 sm:px-4 sm:py-3 sm:text-sm">
-            <p className="text-[10px] uppercase tracking-[0.22em] text-slate-200/80 sm:text-xs">Statut</p>
-            <p className="mt-1 text-xs font-medium sm:mt-1 sm:text-sm">
-               {user?.role === 'admin' ? 'Super administrateur' : 'Utilisateur'}
-            </p>
-          </div>
-        </motion.div>
+           whileHover={{ scale: 1.02 }}
+           className="relative flex h-40 w-full items-center justify-center rounded-[2rem] border border-white/10 bg-white/10 p-6 shadow-soft backdrop-blur-md sm:h-48 lg:w-[280px] xl:w-[320px]"
+         >
+           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 text-white shadow-xl sm:h-20 sm:w-20">
+             <Search className="h-8 w-8 sm:h-10 sm:w-10 text-white/90" />
+           </div>
+           <div className="absolute bottom-4 left-4 rounded-3xl bg-white/15 px-3 py-2 text-xs text-slate-100 shadow-inner sm:bottom-6 sm:left-6 sm:px-4 sm:py-3 sm:text-sm">
+             <p className="text-[10px] uppercase tracking-[0.22em] text-slate-200/80 sm:text-xs">Statut</p>
+             <p className="mt-1 text-xs font-medium sm:mt-1 sm:text-sm">
+                {user?.role === 'admin' ? 'Super administrateur' : 'Utilisateur'}
+             </p>
+           </div>
+         </motion.div>
       </div>
     </motion.section>
   )
