@@ -134,9 +134,14 @@ export default function DocumentArchivePage() {
     }
   }
 
+  const displayedDocuments = useMemo(() => {
+    if (isAdmin) return documents
+    return documents.filter(d => d.uploadedBy === currentUserId)
+  }, [documents, isAdmin, currentUserId])
+
   const paginatedItems = useMemo(() => {
-    return useBackendSearch || useBackendCategory ? documents : documents
-  }, [documents, useBackendSearch, useBackendCategory])
+    return useBackendSearch || useBackendCategory ? displayedDocuments : displayedDocuments
+  }, [displayedDocuments, useBackendSearch, useBackendCategory])
 
   const {
     currentPage,
@@ -343,9 +348,9 @@ export default function DocumentArchivePage() {
                       <td className="rounded-r-[1.5rem] bg-slate-50/50 p-5 text-right dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800 transition-colors shadow-sm group-hover:shadow-md">
                         <div className="flex justify-end gap-2">
                           <button
-                            onClick={() => handlePreview(doc.id!)}
-                            className="p-2.5 rounded-xl text-slate-400 hover:bg-violet-50 hover:text-violet-600 dark:hover:bg-violet-900/30 transition-all"
-                            title="Prévisualiser"
+                             onClick={() => handlePreview(doc.id!)}
+                             className="p-2.5 rounded-xl text-slate-400 hover:bg-violet-50 hover:text-violet-600 dark:hover:bg-violet-900/30 transition-all"
+                             title="Prévisualiser"
                           >
                             <Eye className="h-4.5 w-4.5" />
                           </button>

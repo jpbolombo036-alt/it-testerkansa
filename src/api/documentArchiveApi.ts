@@ -131,3 +131,27 @@ export async function downloadDocument(id: number, fallbackName = `doc-${id}`): 
   a.remove()
   URL.revokeObjectURL(url)
 }
+
+export async function previewDocument(id: number, contentType: string | null, fallbackName = `doc-${id}`): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/document-archive/download/${id}`, {
+    headers: authHeader(),
+  })
+  if (response.status === 404) throw new Error('Fichier physique introuvable')
+  if (!response.ok) throw new Error(`Prévisualisation impossible (${response.status})`)
+
+  const blob = await response.blob()
+  const url = URL.createObjectURL(blob)
+
+  if (contentType === 'application/pdf') {
+    window.open(url, '_blank')
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  } else {
+    const a = document.createElement('a')
+    a.href = url
+    a.download = fallbackName
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  }
+}
