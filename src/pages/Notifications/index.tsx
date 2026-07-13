@@ -10,6 +10,12 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     loadData()
+
+    const interval = setInterval(() => {
+      loadData()
+    }, 5000)
+
+    return () => clearInterval(interval)
   }, [])
 
   const loadData = async () => {

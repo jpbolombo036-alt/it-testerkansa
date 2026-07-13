@@ -18,6 +18,14 @@ export default function Header({ sidebarCollapsed = false, onToggleSidebar }: He
     fetchUnreadCount()
       .then(setUnreadCount)
       .catch(() => {})
+
+    const interval = setInterval(() => {
+      fetchUnreadCount()
+        .then(setUnreadCount)
+        .catch(() => {})
+    }, 5000)
+
+    return () => clearInterval(interval)
   }, [])
 
   return (

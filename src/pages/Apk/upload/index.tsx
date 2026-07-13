@@ -111,7 +111,7 @@ export default function ApkUploadPage() {
         description: formData.description || undefined,
       }
       await uploadApk(formData.file, meta)
-      showToast('success', 'Upload réussi', 'L\'APK a été uploadé avec succès.')
+      showToast('success', 'Upload réussi', 'L\'APK a été uploadé avec succès. Tous les utilisateurs ont été notifiés.')
       navigate('/apk')
     } catch (err) {
       showToast('error', 'Erreur', (err as Error).message || 'Erreur lors de l\'upload de l\'APK.')
