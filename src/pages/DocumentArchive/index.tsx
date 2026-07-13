@@ -358,7 +358,7 @@ export default function DocumentArchivePage() {
                           </button>
                            <button
                              onClick={() => handleDelete(doc.id!)}
-                             hidden={!(isAdmin || currentUserId === doc.uploadedBy)}
+                             hidden={!isAdmin}
                              className="p-2.5 rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/30 transition-all"
                              title="Supprimer"
                            >

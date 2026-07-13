@@ -8,7 +8,11 @@ export function useConfirm() {
     onConfirm: () => {},
   })
 
-  const confirm = useCallback((options: ConfirmOptions & { onConfirm: () => void }) => {
+  const close = useCallback(() => {
+    setState((current) => ({ ...current, open: false }))
+  }, [])
+
+  const confirm = useCallback((options: ConfirmOptions & { onConfirm: () => Promise<void> | void }) => {
     return new Promise<boolean>((resolve) => {
       setState({
         open: true,
@@ -17,17 +21,14 @@ export function useConfirm() {
         confirmText: options.confirmText ?? 'Confirmer',
         cancelText: options.cancelText ?? 'Annuler',
         variant: options.variant ?? 'info',
-        onConfirm: () => {
-          options.onConfirm()
+        onConfirm: async () => {
+          await options.onConfirm()
+          close()
           resolve(true)
         },
       })
     })
-  }, [])
-
-  const close = useCallback(() => {
-    setState((current) => ({ ...current, open: false }))
-  }, [])
+  }, [close])
 
   const dialog = (
     <ConfirmDialog

@@ -144,7 +144,7 @@ export default function ApkPage() {
               </thead>
               <tbody>
                 {displayItems.map((apk) => {
-                  const canDelete = isAdmin || apk.uploadedBy === user?.id
+                   const canDelete = isAdmin
                   return (
                     <motion.tr
                       layout

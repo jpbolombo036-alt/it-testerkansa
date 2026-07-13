@@ -245,15 +245,15 @@ export default function DocumentDetailPage() {
                Modifier
              </button>
            )}
-           {(isAdmin || currentUserId === doc.uploadedBy) && (
-             <button
-               onClick={handleDelete}
-               className="flex items-center justify-center gap-2 rounded-2xl bg-rose-600 px-6 py-2.5 font-bold text-white transition hover:bg-rose-700"
-             >
-               <Trash2 className="h-4 w-4" />
-               Supprimer
-             </button>
-           )}
+            {isAdmin && (
+              <button
+                onClick={handleDelete}
+                className="flex items-center justify-center gap-2 rounded-2xl bg-rose-600 px-6 py-2.5 font-bold text-white transition hover:bg-rose-700"
+              >
+                <Trash2 className="h-4 w-4" />
+                Supprimer
+              </button>
+            )}
          </div>
       </motion.div>
     </div>
