@@ -15,6 +15,7 @@ import {
   FolderOpen,
   PanelLeftClose,
   PanelLeftOpen,
+  Package,
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import logo from '../assets/images/WhatsApp Image 2026-07-07 at 16.40.43.jpeg'
@@ -30,6 +31,7 @@ const baseMenuItems = [
   { label: 'Messages', to: '/messages', icon: MessageCircle },
   { label: 'Rapports', to: '/rapports', icon: ShieldCheck },
   { label: 'Archive Documents', to: '/document-archive', icon: FolderOpen },
+  { label: 'APK', to: '/apk', icon: Package },
   { label: 'Mon Profil', to: '/profil', icon: UserCircle },
 ]
 

@@ -6,13 +6,15 @@ import {
   fetchDocumentsByCategory,
   searchDocuments,
   deleteDocument,
-  DocumentArchive,
+  downloadDocument,
+  DocumentArchiveDTO,
   PageResponse,
 } from '../../api/documentArchiveApi'
 import { Loader2, Plus, Search, X, Trash2, Eye, Download, FileText, FolderOpen, HardDrive, Calendar, User, Tag, ChevronLeft, ChevronRight, Upload } from 'lucide-react'
 import { useToast } from '../../components/ToastProvider'
 import { useConfirm } from '../../hooks/useConfirm'
 import { usePagination } from '../../hooks/usePagination'
+import { useAuth } from '../../hooks/useAuth'
 import { formatFileSize } from '../../utils/fileSizeFormatter'
 import { DOCUMENT_CATEGORIES } from '../../utils/documentCategories'
 
@@ -22,13 +24,17 @@ export default function DocumentArchivePage() {
   const navigate = useNavigate()
   const { showToast } = useToast()
   const { confirm, dialog } = useConfirm()
-  const [documents, setDocuments] = useState<DocumentArchive[]>([])
-  const [pageResponse, setPageResponse] = useState<PageResponse<DocumentArchive> | null>(null)
+  const { user } = useAuth()
+  const [documents, setDocuments] = useState<DocumentArchiveDTO[]>([])
+  const [pageResponse, setPageResponse] = useState<PageResponse<DocumentArchiveDTO> | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
   const [useBackendSearch, setUseBackendSearch] = useState(false)
   const [useBackendCategory, setUseBackendCategory] = useState(false)
+
+  const isAdmin = user?.role === 'admin'
+  const currentUserId = user?.id
 
   const loadDocuments = async () => {
     try {
@@ -113,11 +119,19 @@ export default function DocumentArchivePage() {
             })
           }
           showToast('success', 'Supprimé', 'Document supprimé avec succès.')
-        } catch {
-          showToast('error', 'Erreur', 'Échec de la suppression.')
+        } catch (err) {
+          showToast('error', 'Erreur', (err as Error).message)
         }
       },
     })
+  }
+
+  const handleDownload = async (doc: DocumentArchiveDTO) => {
+    try {
+      await downloadDocument(doc.id, doc.originalFileName)
+    } catch (err) {
+      showToast('error', 'Erreur', (err as Error).message)
+    }
   }
 
   const paginatedItems = useMemo(() => {
@@ -132,7 +146,7 @@ export default function DocumentArchivePage() {
     paginatedItems: displayItems,
   } = usePagination(paginatedItems, ITEMS_PER_PAGE)
 
-  const getDocumentTypeInfo = (contentType: string) => {
+  const getDocumentTypeInfo = (contentType: string | null) => {
     if (contentType === 'application/pdf') {
       return { label: 'PDF', color: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300' }
     }
@@ -143,24 +157,6 @@ export default function DocumentArchivePage() {
       return { label: 'WORD', color: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300' }
     }
     return { label: 'AUTRE', color: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400' }
-  }
-
-  const getApiBaseUrl = () => {
-    const rawUrl = import.meta.env.VITE_API_BASE_URL
-    if (rawUrl && rawUrl.trim() !== '') {
-      return rawUrl.trim().replace(/\/$/, '')
-    }
-    return 'http://localhost:8000'
-  }
-
-  const handleDownload = (doc: DocumentArchive) => {
-    const url = `${getApiBaseUrl()}/api/document-archive/download/${doc.id}`
-    const a = document.createElement('a')
-    a.href = url
-    a.download = doc.originalFileName
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
   }
 
   const handlePreview = (id: number) => {
@@ -360,13 +356,14 @@ export default function DocumentArchivePage() {
                           >
                             <Download className="h-4.5 w-4.5" />
                           </button>
-                          <button
-                            onClick={() => handleDelete(doc.id!)}
-                            className="p-2.5 rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/30 transition-all"
-                            title="Supprimer"
-                          >
-                            <Trash2 className="h-4.5 w-4.5" />
-                          </button>
+                           <button
+                             onClick={() => handleDelete(doc.id!)}
+                             hidden={!(isAdmin || currentUserId === doc.uploadedBy)}
+                             className="p-2.5 rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/30 transition-all"
+                             title="Supprimer"
+                           >
+                             <Trash2 className="h-4.5 w-4.5" />
+                           </button>
                         </div>
                       </td>
                     </motion.tr>

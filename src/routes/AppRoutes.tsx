@@ -40,6 +40,10 @@ const DocumentArchivePage = lazy(() => import('../pages/DocumentArchive'))
 const DocumentDetailPage = lazy(() => import('../pages/DocumentArchive/[id]'))
 const DocumentPreviewPage = lazy(() => import('../pages/DocumentArchive/[id]/preview'))
 const DocumentUploadPage = lazy(() => import('../pages/DocumentArchive/upload'))
+const DocumentEditPage = lazy(() => import('../pages/DocumentArchive/[id]/edit'))
+const ApkPage = lazy(() => import('../pages/Apk'))
+const ApkUploadPage = lazy(() => import('../pages/Apk/upload'))
+const ApkEditPage = lazy(() => import('../pages/Apk/[id]/edit'))
 
 const AppRoutes: React.FC = () => {
   return (
@@ -91,7 +95,11 @@ const AppRoutes: React.FC = () => {
           <Route path="/document-archive" element={<FeatureRoute feature="documentArchiveEnabled"><Suspense fallback={<LoadingFallback />}><DocumentArchivePage /></Suspense></FeatureRoute>} />
           <Route path="/document-archive/upload" element={<Suspense fallback={<LoadingFallback />}><DocumentUploadPage /></Suspense>} />
           <Route path="/document-archive/:id" element={<Suspense fallback={<LoadingFallback />}><DocumentDetailPage /></Suspense>} />
+          <Route path="/document-archive/:id/edit" element={<Suspense fallback={<LoadingFallback />}><DocumentEditPage /></Suspense>} />
           <Route path="/document-archive/:id/preview" element={<Suspense fallback={<LoadingFallback />}><DocumentPreviewPage /></Suspense>} />
+          <Route path="/apk" element={<Suspense fallback={<LoadingFallback />}><ApkPage /></Suspense>} />
+          <Route path="/apk/upload" element={<Suspense fallback={<LoadingFallback />}><ApkUploadPage /></Suspense>} />
+          <Route path="/apk/:id/edit" element={<Suspense fallback={<LoadingFallback />}><ApkEditPage /></Suspense>} />
           <Route path="/rapports" element={<Suspense fallback={<LoadingFallback />}><RapportsPage /></Suspense>} />
           <Route path="/presences" element={
             <AdminRoute>

@@ -1,13 +1,13 @@
-import React, { useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useState, useRef, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { uploadDocument } from '../../../api/documentArchiveApi'
-import { Loader2, Plus, X, Upload, FileText, AlertCircle, CheckCircle, Tag } from 'lucide-react'
-import { useToast } from '../../../components/ToastProvider'
-import { DOCUMENT_CATEGORIES } from '../../../utils/documentCategories'
-import { validateDocumentForm } from '../../../utils/documentValidation'
+import { fetchDocumentById, updateDocument, DocumentArchiveDTO } from '../../../../api/documentArchiveApi'
+import { Loader2, X, Upload, FileText, AlertCircle, CheckCircle, Tag, ArrowLeft } from 'lucide-react'
+import { useToast } from '../../../../components/ToastProvider'
+import { DOCUMENT_CATEGORIES } from '../../../../utils/documentCategories'
+import { validateDocumentForm } from '../../../../utils/documentValidation'
 
-interface UploadForm {
+interface EditForm {
   file: File | null
   title: string
   description: string
@@ -16,16 +16,16 @@ interface UploadForm {
   author: string
 }
 
-export default function DocumentUploadPage() {
+export default function DocumentEditPage() {
   const navigate = useNavigate()
+  const { id } = useParams<{ id: string }>()
   const { showToast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [uploadProgress, setUploadProgress] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [formData, setFormData] = useState<UploadForm>({
+  const [formData, setFormData] = useState<EditForm>({
     file: null,
     title: '',
     description: '',
@@ -33,6 +33,27 @@ export default function DocumentUploadPage() {
     tags: '',
     author: '',
   })
+
+  useEffect(() => {
+    const load = async () => {
+      if (!id) return
+      try {
+        const data = await fetchDocumentById(Number(id))
+        setFormData({
+          file: null,
+          title: data.title,
+          description: data.description || '',
+          category: data.category || '',
+          tags: data.tags || '',
+          author: data.author || '',
+        })
+      } catch {
+        showToast('error', 'Erreur', 'Document introuvable.')
+        navigate('/document-archive')
+      }
+    }
+    load()
+  }, [id])
 
   const handleFileChange = (file: File | null) => {
     setFormData((prev) => ({ ...prev, file }))
@@ -62,33 +83,39 @@ export default function DocumentUploadPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const validationErrors = validateDocumentForm(formData)
+    if (!id) return
+
+    const validationErrors = validateDocumentForm({
+      file: formData.file,
+      title: formData.title,
+      description: formData.description,
+      category: formData.category,
+      tags: formData.tags,
+      author: formData.author,
+    })
     setErrors(validationErrors)
     if (Object.keys(validationErrors).length > 0) {
       showToast('error', 'Validation', 'Veuillez corriger les erreurs dans le formulaire.')
       return
     }
-    if (!formData.file) return
 
     try {
       setIsSubmitting(true)
-      setUploadProgress(0)
       const fd = new FormData()
-      fd.append('file', formData.file)
+      if (formData.file) fd.append('file', formData.file)
       fd.append('title', formData.title)
       if (formData.description) fd.append('description', formData.description)
       if (formData.category) fd.append('category', formData.category)
       if (formData.tags) fd.append('tags', formData.tags)
       if (formData.author) fd.append('author', formData.author)
 
-      await uploadDocument(fd)
-      showToast('success', 'Upload réussi', 'Le document a été uploadé avec succès.')
-      navigate('/document-archive')
-    } catch {
-      showToast('error', 'Erreur', 'Erreur lors de l\'upload du document. Vérifiez le fichier et les champs puis réessayez.')
+      await updateDocument(Number(id), fd)
+      showToast('success', 'Modifié', 'Document mis à jour avec succès.')
+      navigate(`/document-archive/${id}`)
+    } catch (err) {
+      showToast('error', 'Erreur', (err as Error).message)
     } finally {
       setIsSubmitting(false)
-      setUploadProgress(0)
     }
   }
 
@@ -108,18 +135,18 @@ export default function DocumentUploadPage() {
     <div className="space-y-6 p-6">
       <div className="flex items-center gap-4">
         <button
-          onClick={() => navigate('/document-archive')}
+          onClick={() => navigate(`/document-archive/${id}`)}
           className="rounded-2xl bg-slate-100 p-2 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
         >
-          <X className="h-5 w-5" />
+          <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
             <Upload className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Uploader un document</h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Ajoutez un nouveau document dans l'archive</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Modifier le document</h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Mettez à jour les métadonnées ou remplacez le fichier</p>
           </div>
         </div>
       </div>
@@ -133,7 +160,7 @@ export default function DocumentUploadPage() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1.5">
             <label className="text-xs font-bold uppercase text-slate-500 flex items-center gap-1">
-              <FileText className="h-3.5 w-3.5" /> Fichier *
+              <FileText className="h-3.5 w-3.5" /> Remplacer le fichier (optionnel)
             </label>
             <div
               onDragOver={handleDragOver}
@@ -142,10 +169,10 @@ export default function DocumentUploadPage() {
               onClick={() => fileInputRef.current?.click()}
               className={`relative cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center transition-colors ${
                 isDragging
-                  ? 'border-violet-400 bg-violet-50 dark:bg-violet-900/10'
+                  ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/10'
                   : errors.file
                   ? 'border-rose-400 bg-rose-50 dark:bg-rose-900/10'
-                  : 'border-slate-200 bg-slate-50 hover:border-violet-300 dark:border-slate-700 dark:bg-slate-950'
+                  : 'border-slate-200 bg-slate-50 hover:border-amber-300 dark:border-slate-700 dark:bg-slate-950'
               }`}
             >
               <input
@@ -157,7 +184,7 @@ export default function DocumentUploadPage() {
               />
               {formData.file ? (
                 <div className="space-y-2">
-                  <FileText className="mx-auto h-10 w-10 text-violet-600 dark:text-violet-400" />
+                  <FileText className="mx-auto h-10 w-10 text-amber-600 dark:text-amber-400" />
                   <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{formData.file.name}</p>
                   <p className="text-xs text-slate-500">{(formData.file.size / (1024 * 1024)).toFixed(2)} Mo</p>
                   {fileTypeInfo && (
@@ -180,7 +207,7 @@ export default function DocumentUploadPage() {
                 <div className="space-y-2">
                   <Upload className="mx-auto h-10 w-10 text-slate-400" />
                   <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    Glissez-déposez votre fichier ici, ou cliquez pour parcourir
+                    Glissez-déposez un nouveau fichier ici, ou cliquez pour parcourir
                   </p>
                   <p className="text-xs text-slate-500">PDF, DOC, DOCX — Max 150 Mo</p>
                 </div>
@@ -204,7 +231,7 @@ export default function DocumentUploadPage() {
               placeholder="ex: Rapport Annuel 2024"
               className={`w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ${
                 errors.title ? 'ring-rose-400' : 'ring-slate-200'
-              } focus:ring-2 focus:ring-violet-400 dark:bg-slate-950`}
+              } focus:ring-2 focus:ring-amber-400 dark:bg-slate-950`}
             />
             {errors.title && (
               <div className="flex items-center gap-1.5 text-rose-600">
@@ -221,7 +248,7 @@ export default function DocumentUploadPage() {
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Description du document..."
               rows={2}
-              className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-violet-400 dark:bg-slate-950"
+              className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-amber-400 dark:bg-slate-950"
             />
           </div>
 
@@ -231,7 +258,7 @@ export default function DocumentUploadPage() {
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-violet-400 dark:bg-slate-950"
+                className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-amber-400 dark:bg-slate-950"
               >
                 {DOCUMENT_CATEGORIES.map((cat: { value: string; label: string }) => (
                   <option key={cat.value} value={cat.value}>
@@ -248,7 +275,7 @@ export default function DocumentUploadPage() {
                 onChange={(e) => setFormData({ ...formData, author: e.target.value })}
                 placeholder="ex: Jean Dupont"
                 maxLength={255}
-                className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-violet-400 dark:bg-slate-950"
+                className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-amber-400 dark:bg-slate-950"
               />
             </div>
           </div>
@@ -262,7 +289,7 @@ export default function DocumentUploadPage() {
               value={formData.tags}
               onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
               placeholder="ex: rapport, 2024, annuel, financier"
-              className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-violet-400 dark:bg-slate-950"
+              className="w-full rounded-xl border-none bg-slate-50 py-2.5 px-4 text-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-amber-400 dark:bg-slate-950"
             />
           </div>
 
@@ -275,13 +302,13 @@ export default function DocumentUploadPage() {
               >
                 <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800">
                   <motion.div
-                    className="h-2 rounded-full bg-violet-600"
+                    className="h-2 rounded-full bg-amber-600"
                     initial={{ width: 0 }}
                     animate={{ width: '100%' }}
                     transition={{ duration: 2, ease: 'linear' }}
                   />
                 </div>
-                <p className="text-xs text-slate-500">Upload en cours...</p>
+                <p className="text-xs text-slate-500">Mise à jour en cours...</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -290,18 +317,18 @@ export default function DocumentUploadPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-6 py-2.5 font-bold text-white shadow-lg transition hover:bg-violet-700 disabled:opacity-50"
+              className="flex items-center justify-center gap-2 rounded-2xl bg-amber-600 px-6 py-2.5 font-bold text-white shadow-lg transition hover:bg-amber-700 disabled:opacity-50"
             >
               {isSubmitting ? (
                 <Loader2 className="animate-spin" />
               ) : (
                 <CheckCircle className="h-4 w-4" />
               )}
-              Uploader
+              Enregistrer
             </button>
             <button
               type="button"
-              onClick={() => navigate('/document-archive')}
+              onClick={() => navigate(`/document-archive/${id}`)}
               className="rounded-2xl bg-slate-100 px-6 py-2.5 font-bold text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
             >
               Annuler

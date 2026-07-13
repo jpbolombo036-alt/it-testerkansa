@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { fetchDocumentById, DocumentArchive } from '../../../../api/documentArchiveApi'
+import { fetchDocumentById, downloadDocument, DocumentArchiveDTO } from '../../../../api/documentArchiveApi'
 import { Loader2, X, FileText, Download, ArrowLeft } from 'lucide-react'
 import { useToast } from '../../../../components/ToastProvider'
 
@@ -9,16 +9,9 @@ export default function DocumentPreviewPage() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const { showToast } = useToast()
-  const [document, setDocument] = useState<DocumentArchive | null>(null)
+  const [document, setDocument] = useState<DocumentArchiveDTO | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-
-  const getApiBaseUrl = () => {
-    const rawUrl = import.meta.env.VITE_API_BASE_URL
-    if (rawUrl && rawUrl.trim() !== '') {
-      return rawUrl.trim().replace(/\/$/, '')
-    }
-    return 'http://localhost:8000'
-  }
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   const loadDocument = async () => {
     if (!id) return
@@ -38,10 +31,46 @@ export default function DocumentPreviewPage() {
     loadDocument()
   }, [id])
 
+  useEffect(() => {
+    let revoked = false
+    let url: string | null = null
+
+    const loadPreview = async () => {
+      if (!document || document.contentType !== 'application/pdf') return
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL?.trim().replace(/\/$/, '') || 'https://itaccess-backend-production-5145.up.railway.app'}/document-archive/download/${document.id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        })
+        if (!response.ok) return
+        const blob = await response.blob()
+        url = URL.createObjectURL(blob)
+        if (!revoked) setPreviewUrl(url)
+      } catch {
+        // preview unavailable, still allow download
+      }
+    }
+
+    loadPreview()
+
+    return () => {
+      revoked = true
+      if (url) URL.revokeObjectURL(url)
+    }
+  }, [document])
+
   const isPdf = document?.contentType === 'application/pdf'
   const isWord =
     document?.contentType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
     document?.contentType === 'application/msword'
+
+  const handleDownloadClick = async () => {
+    if (!document) return
+    try {
+      await downloadDocument(document.id, document.originalFileName)
+    } catch (err) {
+      showToast('error', 'Erreur', (err as Error).message)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -65,8 +94,6 @@ export default function DocumentPreviewPage() {
       </div>
     )
   }
-
-  const downloadUrl = `${getApiBaseUrl()}/api/document-archive/download/${document.id}`
 
   return (
     <div className="space-y-6 p-6">
@@ -98,14 +125,33 @@ export default function DocumentPreviewPage() {
         transition={{ duration: 0.3 }}
         className="rounded-[2.5rem] bg-white p-4 shadow-soft dark:bg-slate-900"
       >
-        {isPdf && (
+        {isPdf && previewUrl && (
           <iframe
-            src={downloadUrl}
+            src={previewUrl}
             title={document.title}
             width="100%"
             height="75vh"
             style={{ border: 'none' }}
           />
+        )}
+
+        {isPdf && !previewUrl && (
+          <div className="flex flex-col items-center justify-center gap-6 py-20">
+            <FileText className="h-20 w-20 text-rose-400" />
+            <div className="text-center space-y-2">
+              <p className="text-lg font-bold text-slate-900 dark:text-slate-100">Prévisualisation indisponible</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Le fichier n'a pas pu être chargé pour la prévisualisation.
+              </p>
+            </div>
+            <button
+              onClick={handleDownloadClick}
+              className="flex items-center gap-2 rounded-2xl bg-rose-600 px-6 py-2.5 font-bold text-white transition hover:bg-rose-700"
+            >
+              <Download className="h-4 w-4" />
+              Télécharger le fichier
+            </button>
+          </div>
         )}
 
         {isWord && (
@@ -117,16 +163,13 @@ export default function DocumentPreviewPage() {
                 La prévisualisation des fichiers Word n'est pas supportée directement dans le navigateur.
               </p>
             </div>
-            <a
-              href={downloadUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              download={document.originalFileName}
+            <button
+              onClick={handleDownloadClick}
               className="flex items-center gap-2 rounded-2xl bg-blue-600 px-6 py-2.5 font-bold text-white transition hover:bg-blue-700"
             >
               <Download className="h-4 w-4" />
               Télécharger le fichier
-            </a>
+            </button>
           </div>
         )}
 
@@ -134,16 +177,13 @@ export default function DocumentPreviewPage() {
           <div className="flex flex-col items-center justify-center gap-4 py-20">
             <FileText className="h-16 w-16 text-slate-300" />
             <p className="text-slate-500">Format non pris en charge pour la prévisualisation.</p>
-            <a
-              href={downloadUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              download={document.originalFileName}
+            <button
+              onClick={handleDownloadClick}
               className="flex items-center gap-2 rounded-2xl bg-violet-600 px-6 py-2.5 font-bold text-white transition hover:bg-violet-700"
             >
               <Download className="h-4 w-4" />
               Télécharger
-            </a>
+            </button>
           </div>
         )}
       </motion.div>

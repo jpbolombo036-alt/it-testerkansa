@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { fetchDocumentById, deleteDocument, DocumentArchive } from '../../../api/documentArchiveApi'
-import { Loader2, Eye, Download, Trash2, X, FileText, HardDrive, Calendar, User, Tag, ArrowLeft } from 'lucide-react'
+import { fetchDocumentById, deleteDocument, downloadDocument, DocumentArchiveDTO } from '../../../api/documentArchiveApi'
+import { Loader2, Eye, Download, Trash2, X, FileText, HardDrive, Calendar, User, Tag, ArrowLeft, Pencil } from 'lucide-react'
 import { useToast } from '../../../components/ToastProvider'
 import { useConfirm } from '../../../hooks/useConfirm'
+import { useAuth } from '../../../hooks/useAuth'
 import { formatFileSize } from '../../../utils/fileSizeFormatter'
 
 export default function DocumentDetailPage() {
@@ -12,8 +13,12 @@ export default function DocumentDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { showToast } = useToast()
   const { confirm, dialog } = useConfirm()
-  const [doc, setDoc] = useState<DocumentArchive | null>(null)
+  const { user } = useAuth()
+  const [doc, setDoc] = useState<DocumentArchiveDTO | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+
+  const isAdmin = user?.role === 'admin'
+  const currentUserId = user?.id
 
   const loadDocument = async () => {
     if (!id) return
@@ -46,43 +51,33 @@ export default function DocumentDetailPage() {
           await deleteDocument(doc.id!)
           showToast('success', 'Supprimé', 'Document supprimé avec succès.')
           navigate('/document-archive')
-        } catch {
-          showToast('error', 'Erreur', 'Échec de la suppression.')
+        } catch (err) {
+          showToast('error', 'Erreur', (err as Error).message)
         }
       },
     })
   }
 
-  const getDocumentTypeInfo = (contentType: string) => {
+  const handleDownload = async () => {
+    if (!doc) return
+    try {
+      await downloadDocument(doc.id, doc.originalFileName)
+    } catch (err) {
+      showToast('error', 'Erreur', (err as Error).message)
+    }
+  }
+
+  const getDocumentTypeInfo = (contentType: string | null) => {
     if (contentType === 'application/pdf') {
       return { label: 'PDF', color: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300' }
     }
     if (
-      contentType === 'application/vnd.openxmlformats-officedoc.wordprocessingml.document' ||
+      contentType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
       contentType === 'application/msword'
     ) {
       return { label: 'WORD', color: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300' }
     }
     return { label: 'AUTRE', color: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400' }
-  }
-
-  const getApiBaseUrl = () => {
-    const rawUrl = import.meta.env.VITE_API_BASE_URL
-    if (rawUrl && rawUrl.trim() !== '') {
-      return rawUrl.trim().replace(/\/$/, '')
-    }
-    return 'http://localhost:8000'
-  }
-
-  const handleDownload = () => {
-    if (!doc) return
-    const url = `${getApiBaseUrl()}/api/document-archive/download/${doc.id}`
-    const a = document.createElement('a')
-    a.href = url
-    a.download = doc.originalFileName
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
   }
 
   if (isLoading) {
@@ -193,6 +188,16 @@ export default function DocumentDetailPage() {
                 {new Date(doc.uploadDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
+            {doc.updateDate && (
+              <div className="space-y-1">
+                <p className="text-xs font-bold uppercase text-slate-500 flex items-center gap-1">
+                  <Calendar className="h-3.5 w-3.5" /> Dernière modification
+                </p>
+                <p className="text-sm text-slate-700 dark:text-slate-300">
+                  {new Date(doc.updateDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            )}
             <div className="space-y-1">
               <p className="text-xs font-bold uppercase text-slate-500 flex items-center gap-1">
                 <HardDrive className="h-3.5 w-3.5" /> Taille du fichier
@@ -217,21 +222,39 @@ export default function DocumentDetailPage() {
         </div>
 
          <div className="flex flex-row flex-wrap gap-3 pt-6 border-t border-slate-100 dark:border-slate-800 mt-6">
-          <button
-            onClick={() => navigate(`/document-archive/${doc.id}/preview`)}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-6 py-2.5 font-bold text-white transition hover:bg-violet-700"
-          >
-            <Eye className="h-4 w-4" />
-            Prévisualiser
-          </button>
-          <button
-            onClick={handleDownload}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-6 py-2.5 font-bold text-white transition hover:bg-emerald-700"
-          >
-            <Download className="h-4 w-4" />
-            Télécharger
-          </button>
-        </div>
+           <button
+             onClick={() => navigate(`/document-archive/${doc.id}/preview`)}
+             className="flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-6 py-2.5 font-bold text-white transition hover:bg-violet-700"
+           >
+             <Eye className="h-4 w-4" />
+             Prévisualiser
+           </button>
+           <button
+             onClick={handleDownload}
+             className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-6 py-2.5 font-bold text-white transition hover:bg-emerald-700"
+           >
+             <Download className="h-4 w-4" />
+             Télécharger
+           </button>
+           {(isAdmin || currentUserId === doc.uploadedBy) && (
+             <button
+               onClick={() => navigate(`/document-archive/${doc.id}/edit`)}
+               className="flex items-center justify-center gap-2 rounded-2xl bg-amber-600 px-6 py-2.5 font-bold text-white transition hover:bg-amber-700"
+             >
+               <Pencil className="h-4 w-4" />
+               Modifier
+             </button>
+           )}
+           {(isAdmin || currentUserId === doc.uploadedBy) && (
+             <button
+               onClick={handleDelete}
+               className="flex items-center justify-center gap-2 rounded-2xl bg-rose-600 px-6 py-2.5 font-bold text-white transition hover:bg-rose-700"
+             >
+               <Trash2 className="h-4 w-4" />
+               Supprimer
+             </button>
+           )}
+         </div>
       </motion.div>
     </div>
   )

@@ -4,8 +4,9 @@ import { motion } from 'framer-motion';
 import { fetchApplicationById, deleteApplication, Application } from '../api/applicationApi';
 import { fetchApplicationLinksByApplication } from '../api/applicationLinkApi';
 import { fetchAccounts, Account } from '../api/accountApi';
+import { fetchApksByApplication, downloadApk, ApkFileDTO } from '../api/apkApi';
 import { ApplicationLink } from '../types/applicationLinkTypes';
-import { Loader2, Edit3, Trash2, X, Package, Globe, User as UserIcon, ExternalLink, Calendar, Eye } from 'lucide-react';
+import { Loader2, Edit3, Trash2, X, Package, Globe, User as UserIcon, ExternalLink, Calendar, Eye, Smartphone, Download } from 'lucide-react';
 import { useToast } from '../components/ToastProvider';
 import { useConfirm } from '../hooks/useConfirm';
 
@@ -18,8 +19,10 @@ export const ApplicationDetailPage: React.FC = () => {
   const [app, setApp] = useState<Application | null>(null);
   const [appLinks, setAppLinks] = useState<ApplicationLink[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [apks, setApks] = useState<ApkFileDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [loadingApks, setLoadingApks] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -59,6 +62,22 @@ export const ApplicationDetailPage: React.FC = () => {
     };
     loadRelated();
   }, [id, app]);
+
+  useEffect(() => {
+    const loadApks = async () => {
+      if (!id) return;
+      try {
+        setLoadingApks(true)
+        const data = await fetchApksByApplication(Number(id))
+        setApks(Array.isArray(data) ? data : [])
+      } catch {
+        setApks([])
+      } finally {
+        setLoadingApks(false)
+      }
+    }
+    loadApks()
+  }, [id])
 
   const handleDelete = () => {
     if (!app?.id) return;
@@ -262,6 +281,88 @@ export const ApplicationDetailPage: React.FC = () => {
         ) : (
           <div className="rounded-2xl bg-slate-50 p-6 text-center dark:bg-slate-800/50">
             <p className="text-sm font-medium text-slate-500">Aucun compte pour cette application</p>
+          </div>
+        )}
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="rounded-[2.5rem] bg-white p-6 shadow-soft dark:bg-slate-900"
+      >
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <div className="flex items-center gap-2">
+            <Smartphone className="h-5 w-5 text-emerald-600" />
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">APK associés</h2>
+          </div>
+          <button
+            onClick={() => navigate('/apk')}
+            className="text-xs font-bold text-emerald-600 hover:text-emerald-700"
+          >
+            Voir tous les APK
+          </button>
+        </div>
+
+        {loadingApks ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+          </div>
+        ) : apks.length > 0 ? (
+          <div className="rounded-2xl overflow-x-auto border border-slate-100 dark:border-slate-800">
+            <table className="w-full text-left min-w-[640px]">
+              <thead>
+                <tr className="bg-slate-50 dark:bg-slate-800/50">
+                  <th className="px-6 py-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Fichier</th>
+                  <th className="px-6 py-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Version</th>
+                  <th className="px-6 py-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Package</th>
+                  <th className="px-6 py-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Taille</th>
+                  <th className="px-6 py-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Date</th>
+                  <th className="px-6 py-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-500 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {apks.map((apk) => (
+                  <tr key={apk.id} className="border-t border-slate-50 dark:border-slate-800/50">
+                    <td className="px-6 py-3 text-sm font-bold text-slate-800 dark:text-slate-200">{apk.originalFileName}</td>
+                    <td className="px-6 py-3 text-sm text-slate-600 dark:text-slate-300">{apk.version || '-'}</td>
+                    <td className="px-6 py-3 text-sm font-mono text-slate-500">{apk.packageName || '-'}</td>
+                    <td className="px-6 py-3 text-sm text-slate-600 dark:text-slate-300">{(apk.fileSize / (1024 * 1024)).toFixed(2)} Mo</td>
+                    <td className="px-6 py-3 text-sm text-slate-600 dark:text-slate-300">
+                      {new Date(apk.uploadDate).toLocaleDateString('fr-FR')}
+                    </td>
+                    <td className="px-6 py-3 text-right">
+                      <button
+                        onClick={async () => {
+                          try {
+                            const { blob, filename } = await downloadApk(apk.id, apk.originalFileName)
+                            const url = URL.createObjectURL(blob)
+                            const a = document.createElement('a')
+                            a.href = url
+                            a.download = filename
+                            document.body.appendChild(a)
+                            a.click()
+                            a.remove()
+                            URL.revokeObjectURL(url)
+                            showToast('success', 'Téléchargement', 'Téléchargement lancé.')
+                          } catch {
+                            showToast('error', 'Erreur', 'Téléchargement impossible.')
+                          }
+                        }}
+                        className="p-2 rounded-lg text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-900/30"
+                        title="Télécharger"
+                      >
+                        <Download className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="rounded-2xl bg-slate-50 p-6 text-center dark:bg-slate-800/50">
+            <p className="text-sm font-medium text-slate-500">Aucun APK pour cette application</p>
           </div>
         )}
       </motion.div>
