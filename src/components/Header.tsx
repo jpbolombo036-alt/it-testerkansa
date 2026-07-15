@@ -2,6 +2,7 @@ import { Bell, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { fetchUnreadCount } from '../api/systemNotificationApi'
+import { connectNotificationSocket } from '../services/notificationSocket'
 
 import UserDropdown from './UserDropdown'
 import MobileMenu from './MobileMenu'
@@ -26,6 +27,15 @@ export default function Header({ sidebarCollapsed = false, onToggleSidebar }: He
     }, 5000)
 
     return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    const disconnect = connectNotificationSocket(() => {
+      fetchUnreadCount()
+        .then(setUnreadCount)
+        .catch(() => {})
+    })
+    return disconnect
   }, [])
 
   return (
