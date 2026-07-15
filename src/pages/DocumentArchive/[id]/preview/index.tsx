@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { fetchDocumentById, downloadDocument, DocumentArchiveDTO } from '../../../../api/documentArchiveApi'
 import { Loader2, X, FileText, Download, ArrowLeft } from 'lucide-react'
 import { useToast } from '../../../../components/ToastProvider'
+import { API_BASE_URL } from '../../../../config'
 
 export default function DocumentPreviewPage() {
   const navigate = useNavigate()
@@ -38,7 +39,7 @@ export default function DocumentPreviewPage() {
     const loadPreview = async () => {
       if (!document || document.contentType !== 'application/pdf') return
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL?.trim().replace(/\/$/, '') || 'https://itaccess-backend-production-5145.up.railway.app'}/document-archive/download/${document.id}`, {
+        const response = await fetch(`${API_BASE_URL}/document-archive/download/${document.id}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         })
         if (!response.ok) return

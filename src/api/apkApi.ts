@@ -1,4 +1,5 @@
 import api from './axios'
+import { API_BASE_URL } from '../config'
 
 export interface ApkFileDTO {
   id: number
@@ -76,11 +77,7 @@ export async function uploadApk(
 
 export async function downloadApk(id: number, fallbackFilename?: string) {
   const token = localStorage.getItem('token')
-  const baseUrl = (() => {
-    const raw = import.meta.env.VITE_API_BASE_URL
-    return raw && raw.trim() ? raw.trim().replace(/\/$/, '') : 'https://itaccess-backend-production-5145.up.railway.app'
-  })()
-  const res = await fetch(`${baseUrl}/apk/download/${id}`, {
+  const res = await fetch(`${API_BASE_URL}/apk/download/${id}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   })
   if (!res.ok) throw new Error(`Téléchargement impossible (${res.status})`)
