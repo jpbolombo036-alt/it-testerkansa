@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Send, Bot, User, Loader2, Trash2, Sparkles, ChevronDown } from 'lucide-react'
-import { sendAiMessage, type AiMessage } from '../../api/aiApi'
+import { sendAiMessage, sendAiMessageStream, getAiConversations, type AiMessage, type AiChatResponse } from '../../api/aiApi'
 
 interface ChatMessage {
   id: string
@@ -27,14 +27,13 @@ Que puis-je faire pour vous ?`,
   timestamp: new Date(),
 }
 
-// Simple markdown renderer
 function renderMarkdown(text: string): string {
   return text
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/`(.*?)`/g, '<code class="ai-code-inline">$1</code>')
     .replace(/^### (.*$)/gim, '<h3 class="ai-h3">$1</h3>')
-    .replace(/^## (.*$)/gim, '<h2 class="ai-h2">$1</h2>')
+    .replace(/^## (.*$)/gim, '<h2 class="ai-h2">$2</h2>')
     .replace(/^# (.*$)/gim, '<h1 class="ai-h1">$1</h1>')
     .replace(/^- (.*$)/gim, '<li class="ai-li">$1</li>')
     .replace(/(<li.*<\/li>\n?)+/g, '<ul class="ai-ul">$&</ul>')
@@ -62,6 +61,7 @@ export default function AiChatWidget() {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [hasUnread, setHasUnread] = useState(false)
+  const [conversationId, setConversationId] = useState<string | undefined>(undefined)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -105,13 +105,33 @@ export default function AiChatWidget() {
     setIsLoading(true)
 
     try {
-      // Build conversation history (exclude welcome + loading messages)
       const history: AiMessage[] = messages
         .filter((m) => m.id !== 'welcome' && !m.isLoading)
         .map((m) => ({ role: m.role, content: m.content }))
       history.push({ role: 'user', content: trimmed })
 
-      const response = await sendAiMessage({ messages: history })
+      let response: AiChatResponse;
+      try {
+        response = await sendAiMessageStream(
+          { conversationId, messages: history },
+          (chunk) => {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === 'loading'
+                  ? { ...m, content: chunk }
+                  : m
+              )
+            )
+          }
+        )
+      } catch (streamError) {
+        console.warn('Streaming failed, falling back to non-streaming:', streamError)
+        response = await sendAiMessage({ conversationId, messages: history })
+      }
+
+      if (response.conversationId && !conversationId) {
+        setConversationId(String(response.conversationId))
+      }
 
       const assistantMsg: ChatMessage = {
         id: Date.now().toString() + '_ai',
@@ -147,6 +167,7 @@ export default function AiChatWidget() {
 
   const handleClear = () => {
     setMessages([WELCOME_MESSAGE])
+    setConversationId(undefined)
   }
 
   return (
@@ -238,6 +259,7 @@ export default function AiChatWidget() {
               <button
                 id="ai-chat-close"
                 onClick={() => setIsOpen(false)}
+                title="Fermer"
                 className="p-1.5 rounded-lg text-violet-400 hover:text-white hover:bg-violet-800/40 transition-colors"
               >
                 <X className="w-4 h-4" />
